@@ -115,11 +115,11 @@ class WikiParser:
 
 class AsyncWikiIterator:
 
-    def __init__(self, dataset_size=10000):
+    def __init__(self, processor, dataset_size=10000):
         self.WIKI_API_URL = "https://en.wikipedia.org/w/api.php"
         self.dataset_size = dataset_size
         self.ind = 0
-        self.processor = TextProcessor()
+        self.processor = processor
 
     async def get_random_wikipedia_title(self):
         """Fetches a random Wikipedia page title."""
@@ -171,6 +171,7 @@ class AsyncWikiParser:
         self.output_path = output_path
         self.counter = 0
         self.lock = asyncio.Lock()
+        self.processor = TextProcessor()
 
     async def write_section(self, sections_set, status_every, delay, semaphore):
         async with semaphore:
@@ -190,7 +191,7 @@ class AsyncWikiParser:
 
         tasks = []
         semaphore = asyncio.Semaphore(num_concurrent)
-        async for sections_set in AsyncWikiIterator(dataset_size=dataset_size):
+        async for sections_set in AsyncWikiIterator(processor=self.processor, dataset_size=dataset_size):
             task = asyncio.create_task(self.write_section(sections_set, status_every, delay, semaphore))
             tasks.append(task)
 

@@ -49,7 +49,7 @@ class TextProcessor:
 
             # Tokenize and remove frequent tokens
             token_lst = word_tokenize(sentence)
-            token_lst_new = [token for token in token_lst if random.random() > self.proba_dct[token]]
+            token_lst_new = [token for token in token_lst if random.random() > self.proba_dct.get(token, 0)]
             sentence_new = ' '.join(token_lst_new)
 
             # Save updated sentence if it is not empty
