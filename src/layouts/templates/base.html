@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            html, body {
+                height: 100%;
+                margin: 0;
+                overflow: hidden; /* Prevents scrollbars */
+            }
+            body {
+                background: url({{ bg_image }}) no-repeat center center;
+                background-size: cover;
+                background-color: {{ bg_color }};
+                font-family: {{ font }};
+                color: {{ text_color }};
+                font-size: {{ font_size }}px;
+                position: relative; /* Ensures absolute positioning is relative to the body */
+            }
+            .text {
+                position: absolute;
+                top: {{ top }}%;
+                left: {{ left }}%;
+                transform: translate(-50%, -50%); /* Centers the text around (top, left) */
+            }
+        </style>
+    </head>
+    <body>
+        <div class="text">
+            {{ text }}
+        </div>
+    </body>
+</html>

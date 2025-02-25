@@ -1,0 +1,8 @@
+bs4
+Jinja2
+matplotlib
+nltk
+numpy
+opencv-python
+pillow
+selenium
