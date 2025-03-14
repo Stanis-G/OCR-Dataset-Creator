@@ -12,7 +12,7 @@ from parsers.parser_utils import TextProcessor
 import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
-from utils.utils import set_driver
+from utils.utils import set_driver, save_fileobj_to_s3
 
 
 class YouTubeParser:
@@ -55,10 +55,9 @@ class YouTubeParser:
 
 class WikiParser:
 
-    def __init__(self, output_path):
-        self.output_path = output_path
+    def __init__(self, bucket_name):
+        self.bucket_name = bucket_name
         self.WIKI_API_URL = "https://en.wikipedia.org/w/api.php"
-        self.processor = TextProcessor()
 
 
     def get_random_wikipedia_title(self):
@@ -66,7 +65,7 @@ class WikiParser:
         params = {
             "action": "query",
             "list": "random",
-            "rnnamespace": 0,  # Only main articles (not Talk, User, etc.)
+            "rnnamespace": 0, # Only main articles (not Talk, User, etc.)
             "format": "json"
         }
         response = requests.get(self.WIKI_API_URL, params=params).json()
@@ -92,25 +91,28 @@ class WikiParser:
         return sentences
 
 
-    def __call__(self, dataset_size=10000, status_every=100, delay=0.05):
+    def __call__(self, processor_config, dataset_size=10000, status_every=100, delay=0.05):
         """Collects Wikipedia section titles until reaching the target count."""
-        os.makedirs(self.output_path, exist_ok=True)
+
+        self.processor = TextProcessor(processor_config)
 
         num = 0
-        while len(os.listdir(self.output_path)) < dataset_size:
+        row_data_bucket_name = 'raw-' + self.bucket_name
+        while num < dataset_size:
             page_title = self.get_random_wikipedia_title()
             sentences = self.get_sentences(page_title)
             for text in sentences:
-                with open(os.path.join(self.output_path, f'title_{num}.txt'), 'w', encoding='utf-8') as f:
-                    f.write(text)
+                file_name = f'title_{num}.txt'
+                save_fileobj_to_s3(text, file_name, row_data_bucket_name, prefix='texts')
                 num += 1
                 if status_every and num % status_every == 0:
                     print(num)
             time.sleep(delay) # Avoid hitting API rate limits
         
         # Postprocessing
-        self.processor.calc_probas()
-        self.processor.remove_frequent_tokens(self.output_path)
+        if 'remove_frequent_tokens' in processor_config:
+            self.processor.calc_probas()
+            self.processor.remove_frequent_tokens(row_data_bucket_name, self.bucket_name)
 
 
 class AsyncWikiIterator:
@@ -126,7 +128,7 @@ class AsyncWikiIterator:
         params = {
             "action": "query",
             "list": "random",
-            "rnnamespace": 0,  # Only main articles (not Talk, User, etc.)
+            "rnnamespace": 0, # Only main articles (not Talk, User, etc.)
             "format": "json"
         }
         response = await asyncio.to_thread(requests.get, self.WIKI_API_URL, params=params)
