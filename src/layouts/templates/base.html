@@ -21,6 +21,9 @@
                 top: {{ top }}%;
                 left: {{ left }}%;
                 transform: translate(-50%, -50%); /* Centers the text around (top, left) */
+                background-color: {{ text_highlight_color }}; /* Highlight the text */
+                padding: {{ highlight_padding_height }}px {{ highlight_padding_width }}px; /* Add padding to make highlight visible */
+                border-radius: {{ hihglight_rounding }}px; /* round off the corners */
             }
         </style>
     </head>

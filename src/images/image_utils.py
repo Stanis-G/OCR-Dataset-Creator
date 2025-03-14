@@ -14,6 +14,7 @@ class ImageProcessor:
             'add_random_glare': self.add_random_glare,
             'blur': self.blur,
             'random_blur': self.random_blur,
+            'random_resize': self.random_resize
         }
 
     
@@ -93,9 +94,15 @@ class ImageProcessor:
 
 
     def random_blur(self, img, blur_type_values=('avg', 'median', 'gaussian'), ksize_range=(3, 8)):
-
         if random.randint(0, 1):
             blur_type = random.choice(blur_type_values)
             ksize = random.randint(*ksize_range)
             return self.blur(img, blur_type, ksize)
         return img
+    
+
+    def random_resize(self, img, width_range, height_range):
+        shape_new = random.randint(*width_range), random.randint(*height_range)
+        img = Image.fromarray(img)
+        img = img.resize(shape_new)
+        return np.array(img)

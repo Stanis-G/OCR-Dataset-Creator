@@ -6,7 +6,7 @@ parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
 from src.dataset.dataset import OCRDataset
-from layouts.layouts import HTMLCreator
+from src.layouts.layouts import HTMLCreator
 from src.parsers.parsers import WikiParser
 from src.images.images import ImageCreator
 from src.layouts.config import FONTS, COLORS, BACKGROUND_IMAGES
@@ -34,13 +34,16 @@ html_processor_config = {
     'bg_images': BACKGROUND_IMAGES,
     'bg_colors': COLORS,
     'text_colors': COLORS,
+    'text_highlight_colors': COLORS,
+    'highlight_padding': (1, 30),
+    'highlight_rounding': (1, 15),
     'fonts': FONTS,
     'font_size': (20, 45),
     'top': (5, 75),
     'left': (5, 75),
 }
 image_processor_config = {
-    'methods': ['add_random_glare', 'random_blur'],
+    'methods': ['add_random_glare', 'random_blur', 'random_resize'],
     'params': [
         dict(
             center_range=(0, 1),
@@ -51,7 +54,11 @@ image_processor_config = {
         dict(
             blur_type_values=('avg', 'median', 'gaussian'),
             ksize_range=(3, 8),
-        )
+        ),
+        dict(
+            width_range=(500, 1500),
+            height_range=(500, 1500),
+        ),
     ],
 }
 
