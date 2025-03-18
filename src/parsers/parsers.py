@@ -55,9 +55,10 @@ class YouTubeParser:
 
 class WikiParser:
 
-    def __init__(self, bucket_name):
+    def __init__(self, bucket_name, prefix='texts'):
         self.bucket_name = bucket_name
         self.WIKI_API_URL = "https://en.wikipedia.org/w/api.php"
+        self.prefix = prefix
 
 
     def get_random_wikipedia_title(self):
@@ -103,7 +104,7 @@ class WikiParser:
             sentences = self.get_sentences(page_title)
             for text in sentences:
                 file_name = f'title_{num}.txt'
-                save_fileobj_to_s3(text, file_name, row_data_bucket_name, prefix='texts')
+                save_fileobj_to_s3(text, file_name, row_data_bucket_name, prefix=self.prefix)
                 num += 1
                 if status_every and num % status_every == 0:
                     print(num)
@@ -111,6 +112,7 @@ class WikiParser:
         
         # Postprocessing
         if 'remove_frequent_tokens' in processor_config:
+            self.processor.save_state('token_counts.json')
             self.processor.calc_probas()
             self.processor.remove_frequent_tokens(row_data_bucket_name, self.bucket_name)
 

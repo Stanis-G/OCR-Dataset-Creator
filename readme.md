@@ -24,8 +24,7 @@ The considerations include:
 2. Refine async classes
 3. Encapsulating file storage interaction in separate class (local + S3)
 4. Extending processing functions
-5. Adding multiple text blocks in one template
-6. Save screenshots with different shapes
-7. Add more font images
-8. Add more details into html template (lines, frames, tables...)
-9. Adding bounding boxes aroung text blocks in images for detection models
+5. Adding support for more tokenizers
+6. Adding multiple text blocks in one template
+7. Add more details into html template (lines, frames, tables...)
+8. Adding bounding boxes aroung text blocks in images for detection models

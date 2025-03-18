@@ -9,7 +9,7 @@ from src.dataset.dataset import OCRDataset
 from src.layouts.layouts import HTMLCreator
 from src.parsers.parsers import WikiParser
 from src.images.images import ImageCreator
-from src.layouts.config import FONTS, COLORS, BACKGROUND_IMAGES
+from src.layouts.config import FONTS, COLORS
 
 
 arg_parser = argparse.ArgumentParser()
@@ -22,16 +22,17 @@ dataset_size = arg_parser.parse_args().dataset_size
 status_every = arg_parser.parse_args().status_every
 driver_path = 'chromedriver-win64/chromedriver.exe'
 
-text_processor_config = [
-    'remove_section_headers',
-    'remove_non_ascii_symbols',
-    'remove_references',
-    'remove_latex',
-    'strip_sentences',
-    'remove_frequent_tokens',
-]
+text_processor_config = {
+    'remove_section_headers': {},
+    'remove_non_ascii_symbols': {},
+    'remove_references': {},
+    'remove_latex': {},
+    'strip_sentences': {},
+    'remove_short_sentences': {'min_len': 3},
+    'remove_frequent_tokens': {},
+}
 html_processor_config = {
-    'bg_images': BACKGROUND_IMAGES,
+    'bg_images': 'bg_images',
     'bg_colors': COLORS,
     'text_colors': COLORS,
     'text_highlight_colors': COLORS,

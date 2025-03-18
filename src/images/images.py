@@ -11,29 +11,36 @@ sys.path.append(str(parent_dir))
 import os
 from urllib.request import pathname2url
 import numpy as np
-from utils.utils import set_driver, save_fileobj_to_s3, list_objects_in_bucket, read_file_from_s3
+from utils.utils import set_driver, save_fileobj_to_s3, list_objects_in_bucket, read_file_from_s3, check_s3_file_exists
 from images.image_utils import ImageProcessor
 
 
 class ImageCreator:
     """Add visual effects to image to enable OCR model recognize text in complex conditions"""
     
-    def __init__(self, bucket_name, driver_path):
+    def __init__(self, bucket_name, driver_path, prefix='images'):
         self.bucket_name = bucket_name
         self.driver_path = driver_path
+        self.prefix = prefix
 
 
-    def __call__(self, processor_config, status_every=1000):
+    def __call__(self, processor_config, pages_prefix, status_every=1000):
 
         self.processor = ImageProcessor(processor_config)
 
         driver = set_driver(self.driver_path)
 
-        os.makedirs('tmp/pages')
-        for i, file_name in enumerate(list_objects_in_bucket(self.bucket_name, prefix='pages', page_size=1000)):
+        os.makedirs('tmp/pages', exist_ok=True)
+        for i, file_name in enumerate(list_objects_in_bucket(self.bucket_name, prefix=pages_prefix, page_size=1000)):
+
+            num = int(file_name.split('_')[1].split('.')[0])
+
+            # Check if image already exists
+            img_name = f'image_{num}.png'
+            if check_s3_file_exists(self.bucket_name, f'{self.prefix}/{img_name}'):
+                continue
 
             # Get html page from S3 by URL
-            num = int(file_name.split('_')[1].split('.')[0])
             page = read_file_from_s3(file_name, self.bucket_name)
 
             # Temporary save file and read it using driver
@@ -52,8 +59,7 @@ class ImageCreator:
             img = self.processor(img)
 
             # Save image to S3
-            img_name = f'image_{num}.png'
-            save_fileobj_to_s3(img, img_name, self.bucket_name, prefix='images')
+            save_fileobj_to_s3(img, img_name, self.bucket_name, prefix=self.prefix)
 
             if status_every and i % status_every == 0:
                 print(i)

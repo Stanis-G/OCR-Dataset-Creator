@@ -1,8 +1,10 @@
 import os
 from io import BytesIO
 import boto3
+from botocore.exceptions import ConnectionClosedError, ClientError
 from dotenv import load_dotenv
 from PIL import Image
+import time
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -30,7 +32,7 @@ def set_driver(driver_path, download_dir=None):
     return driver
 
 
-def get_s3_client(bucket_name='ocr_dataset'):
+def get_s3_client(bucket_name='ocr-dataset', retries=10, delay=1):
     session = boto3.session.Session()
     s3 = session.client(
         service_name='s3',
@@ -41,7 +43,15 @@ def get_s3_client(bucket_name='ocr_dataset'):
 
     # Create bucket if it doesn't exist
     try:
-        s3.head_bucket(Bucket=bucket_name)
+        for i in range(retries):
+            try:
+                s3.head_bucket(Bucket=bucket_name)
+                continue
+            except ConnectionClosedError:
+                if i < retries - 1:
+                    time.sleep(delay)
+                else:
+                    raise
     except s3.exceptions.ClientError:
         s3.create_bucket(Bucket=bucket_name)
 
@@ -101,3 +111,14 @@ def list_objects_in_bucket(bucket_name, prefix, page_size=1000):
         objects.extend(obj["Key"] for obj in page.get("Contents", []))
 
     return objects
+
+
+def check_s3_file_exists(bucket_name, file_name):
+    s3 = get_s3_client(bucket_name)
+    try:
+        s3.head_object(Bucket=bucket_name, Key=file_name)
+        return True
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "404":
+            return False # File does not exist
+        raise # Raise other errors

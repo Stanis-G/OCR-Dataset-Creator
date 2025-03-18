@@ -1,4 +1,4 @@
-from io import BytesIO
+import json
 import nltk
 from nltk import FreqDist, word_tokenize
 import random
@@ -34,11 +34,24 @@ class TextProcessor:
             sentence_lst = self.remove_latex(sentence_lst)
         if 'strip_sentences' in self.config:
             sentence_lst = self.strip_sentences(sentence_lst)
+        if 'remove_short_sentences' in self.config:
+            sentence_lst = self.remove_short_sentences(sentence_lst, **self.config['remove_short_sentences'])
         if 'remove_frequent_tokens' in self.config:
             for sentence in sentence_lst:
                 tokens = word_tokenize(sentence)
             self.token_counts.update(tokens)
         return sentence_lst
+    
+
+    def save_state(self, file_name):
+        file_name = file_name + '.json' if not file_name.endswith('.json') else file_name
+        with open(file_name, 'w') as f:
+            json.dump(self.token_counts, f)
+
+
+    def load_state(self, file_name):
+        with open(file_name, 'r') as f:
+            self.token_counts = json.load(f)
     
 
     def calc_probas(self):
@@ -66,9 +79,10 @@ class TextProcessor:
             token_lst = word_tokenize(sentence)
             token_lst_new = [token for token in token_lst if random.random() > self.proba_dct.get(token, 0)]
             sentence_new = ' '.join(token_lst_new)
+            sentence_new = sentence_new.strip()
 
             # Save updated sentence if it is not empty
-            if sentence_new.strip():
+            if sentence_new:
                 save_fileobj_to_s3(sentence_new, file_name, processed_bucket_name)
 
 
@@ -105,3 +119,7 @@ class TextProcessor:
 
     def strip_sentences(self, sentences):
         return [i.strip() for i in sentences]
+    
+
+    def remove_short_sentences(self, sentences, min_len=2):
+        return [i for i in sentences if len(i) >= min_len]
