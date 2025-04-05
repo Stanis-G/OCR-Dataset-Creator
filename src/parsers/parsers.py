@@ -2,6 +2,7 @@ import asyncio
 from bs4 import BeautifulSoup
 import requests
 import sys
+from tqdm import tqdm
 from pathlib import Path
 
 parent_dir = Path(__file__).resolve().parent.parent
@@ -12,7 +13,7 @@ from parsers.parser_utils import TextProcessor
 import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
-from utils.utils import set_driver, save_fileobj_to_s3
+from utils.utils import set_driver
 
 
 class YouTubeParser:
@@ -55,10 +56,10 @@ class YouTubeParser:
 
 class WikiParser:
 
-    def __init__(self, bucket_name, prefix='texts'):
-        self.bucket_name = bucket_name
+    def __init__(self, storage, subdir='texts'):
+        self.storage = storage
+        self.subdir = subdir
         self.WIKI_API_URL = "https://en.wikipedia.org/w/api.php"
-        self.prefix = prefix
 
 
     def get_random_wikipedia_title(self):
@@ -92,29 +93,32 @@ class WikiParser:
         return sentences
 
 
-    def __call__(self, processor_config, dataset_size=10000, status_every=100, delay=0.05):
+    def __call__(self, processor_config, dataset_size=10000, delay=0.05):
         """Collects Wikipedia section titles until reaching the target count."""
 
         self.processor = TextProcessor(processor_config)
 
-        num = 0
-        row_data_bucket_name = 'raw-' + self.bucket_name
-        while num < dataset_size:
+        for num in tqdm(range(dataset_size)):
             page_title = self.get_random_wikipedia_title()
             sentences = self.get_sentences(page_title)
             for text in sentences:
+
                 file_name = f'title_{num}.txt'
-                save_fileobj_to_s3(text, file_name, row_data_bucket_name, prefix=self.prefix)
-                num += 1
-                if status_every and num % status_every == 0:
-                    print(num)
+
+                if self.storage.check_file_exists(file_name, self.subdir):
+                    continue
+                self.storage.save_file(text, file_name, self.subdir)
             time.sleep(delay) # Avoid hitting API rate limits
         
         # Postprocessing
         if 'remove_frequent_tokens' in processor_config:
             self.processor.save_state('token_counts.json')
             self.processor.calc_probas()
-            self.processor.remove_frequent_tokens(row_data_bucket_name, self.bucket_name)
+            # Read every saved file, postprocess and rewrite it
+            for file_name in tqdm(self.storage.read_all(self.subdir)):
+                text = self.storage.read_file(file_name, self.subdir, file_type='text')
+                text = self.processor.remove_frequent_tokens(text)
+                self.storage.save_file(text, file_name, self.subdir)
 
 
 class AsyncWikiIterator:
@@ -147,7 +151,7 @@ class AsyncWikiIterator:
         }
         response = await asyncio.to_thread(requests.get, self.WIKI_API_URL, params=params)
         if "error" in response:
-            return []  # Skip pages with issues
+            return [] # Skip pages with issues
         response_data = response.json()
         html_content = response_data.get("parse", {}).get("text", {}).get("*", "")
 

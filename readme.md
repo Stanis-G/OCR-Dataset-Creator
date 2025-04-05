@@ -20,11 +20,13 @@ Contains examples of using for different parsers. Some examples are inconsistent
 
 # Considerations
 The considerations include:
-1. Adding tests
+1. Add tests
 2. Refine async classes
-3. Encapsulating file storage interaction in separate class (local + S3)
-4. Extending processing functions
-5. Adding support for more tokenizers
-6. Adding multiple text blocks in one template
-7. Add more details into html template (lines, frames, tables...)
-8. Adding bounding boxes aroung text blocks in images for detection models
+3. Extend processing functions
+4. Add support for more tokenizers
+5. Add multiple text blocks in one template
+6. Add more details into html template (lines, frames, tables...)
+7. Add bounding boxes aroung text blocks in images for detection models
+8. Get rid of driver
+9. Create storage for background images
+10. Fix insertion of backgroung images into a template when making screenshot

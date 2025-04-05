@@ -1,9 +1,10 @@
 import asyncio
 from io import BytesIO
 import sys
-import shutil
+from tqdm import tqdm
 from pathlib import Path
 from PIL import Image
+import urllib
 
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
@@ -11,44 +12,37 @@ sys.path.append(str(parent_dir))
 import os
 from urllib.request import pathname2url
 import numpy as np
-from utils.utils import set_driver, save_fileobj_to_s3, list_objects_in_bucket, read_file_from_s3, check_s3_file_exists
+from utils.utils import set_driver
 from images.image_utils import ImageProcessor
 
 
 class ImageCreator:
     """Add visual effects to image to enable OCR model recognize text in complex conditions"""
     
-    def __init__(self, bucket_name, driver_path, prefix='images'):
-        self.bucket_name = bucket_name
+    def __init__(self, storage, driver_path, subdir='images'):
+        self.storage = storage
+        self.subdir = subdir
         self.driver_path = driver_path
-        self.prefix = prefix
 
 
-    def __call__(self, processor_config, pages_prefix, status_every=1000):
+    def __call__(self, processor_config, pages_subdir):
 
         self.processor = ImageProcessor(processor_config)
 
         driver = set_driver(self.driver_path)
 
-        os.makedirs('tmp/pages', exist_ok=True)
-        for i, file_name in enumerate(list_objects_in_bucket(self.bucket_name, prefix=pages_prefix, page_size=1000)):
+        for file_name in tqdm(self.storage.read_all(pages_subdir)):
 
             num = int(file_name.split('_')[1].split('.')[0])
+            img_name = f'image_{num}.png'
 
             # Check if image already exists
-            img_name = f'image_{num}.png'
-            if check_s3_file_exists(self.bucket_name, f'{self.prefix}/{img_name}'):
+            if self.storage.check_file_exists(img_name, self.subdir):
                 continue
 
-            # Get html page from S3 by URL
-            page = read_file_from_s3(file_name, self.bucket_name)
-
-            # Temporary save file and read it using driver
-            rel_path = f'tmp/{file_name}'
-            with open(rel_path, 'w') as f:
-                f.write(page)
-            file_path = os.path.abspath(rel_path)
-            url = f"file://{file_path}" 
+            # Get html page, inject into browser and get its url
+            page = self.storage.read_file(file_name, pages_subdir, file_type='text')
+            url = "data:text/html;charset=utf-8," + urllib.parse.quote(page)
             driver.get(url)
 
             # Hide scrollbar with JavaScript
@@ -58,13 +52,8 @@ class ImageCreator:
             img = driver.get_screenshot_as_png()
             img = self.processor(img)
 
-            # Save image to S3
-            save_fileobj_to_s3(img, img_name, self.bucket_name, prefix=self.prefix)
-
-            if status_every and i % status_every == 0:
-                print(i)
-
-        shutil.rmtree('tmp')
+            # Save image
+            self.storage.save_file(img, img_name, self.subdir)
 
 
 class AsyncImageIterator:

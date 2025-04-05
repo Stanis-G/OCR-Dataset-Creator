@@ -9,8 +9,6 @@ from pathlib import Path
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
-from utils.utils import save_fileobj_to_s3, read_file_from_s3, list_objects_in_bucket
-
 
 class TextProcessor:
 
@@ -65,25 +63,18 @@ class TextProcessor:
             self.proba_dct.update({token: proba_to_remove})
 
 
-    def remove_frequent_tokens(self, raw_bucket_name, processed_bucket_name, page_size=1000):
+    def remove_frequent_tokens(self, sentence):
         """Remove tokens based on calculated probas"""
         if not len(self.token_counts):
             raise ValueError('You must calculate probas before token removal. Use "calc_probas" first')
         
-        prefix = 'texts'
-        for file_name in list_objects_in_bucket(raw_bucket_name, prefix=prefix, page_size=page_size):
+        # Tokenize and remove frequent tokens
+        token_lst = word_tokenize(sentence)
+        token_lst_new = [token for token in token_lst if random.random() > self.proba_dct.get(token, 0)]
+        sentence_new = ' '.join(token_lst_new)
+        sentence_new = sentence_new.strip()
 
-            sentence = read_file_from_s3(file_name, raw_bucket_name)
-
-            # Tokenize and remove frequent tokens
-            token_lst = word_tokenize(sentence)
-            token_lst_new = [token for token in token_lst if random.random() > self.proba_dct.get(token, 0)]
-            sentence_new = ' '.join(token_lst_new)
-            sentence_new = sentence_new.strip()
-
-            # Save updated sentence if it is not empty
-            if sentence_new:
-                save_fileobj_to_s3(sentence_new, file_name, processed_bucket_name)
+        return sentence_new if sentence_new else sentence
 
 
     def remove_section_headers(self, soup):

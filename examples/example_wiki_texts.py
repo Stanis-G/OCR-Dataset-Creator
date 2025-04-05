@@ -1,6 +1,8 @@
+import os
 import argparse
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
 
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
@@ -10,16 +12,22 @@ from src.layouts.layouts import HTMLCreator
 from src.parsers.parsers import WikiParser
 from src.images.images import ImageCreator
 from src.layouts.config import FONTS, COLORS
+from src.utils.storage import S3Storage
 
+load_dotenv()
+
+client_config = dict(
+    endpoint_url=os.getenv("MINIO_URL"),
+    aws_access_key_id=os.getenv("MINIO_ROOT_USER"),
+    aws_secret_access_key=os.getenv("MINIO_ROOT_PASSWORD"),
+)
 
 arg_parser = argparse.ArgumentParser()
-arg_parser.add_argument('-o', '--bucket_name', nargs='?', default='ocr-dataset', type=str)
-arg_parser.add_argument('-d', '--dataset_size', nargs='?', default=1000, type=int)
-arg_parser.add_argument('-s', '--status_every', nargs='?', default=1000, type=int)
+arg_parser.add_argument('-n', '--name', nargs='?', default='ocr-dataset', type=str)
+arg_parser.add_argument('-s', '--size', nargs='?', default=1000, type=int)
 
-bucket_name = arg_parser.parse_args().bucket_name
-dataset_size = arg_parser.parse_args().dataset_size
-status_every = arg_parser.parse_args().status_every
+dataset_name = arg_parser.parse_args().name
+dataset_size = arg_parser.parse_args().size
 driver_path = 'chromedriver-win64/chromedriver.exe'
 
 text_processor_config = {
@@ -68,12 +76,11 @@ dataset = OCRDataset(
     parser=WikiParser,
     html_creator=HTMLCreator,
     image_creator=ImageCreator,
-    bucket_name=bucket_name,
+    storage=S3Storage(bucket_name=dataset_name, client_config=client_config),
 )
 dataset(
     text_processor_config=text_processor_config,
     html_processor_config=html_processor_config,
     image_processor_config=image_processor_config,
     dataset_size=dataset_size,
-    status_every=status_every,
 )
