@@ -13,7 +13,72 @@ from parsers.parser_utils import TextProcessor
 import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
-from utils.utils import set_driver
+from utils.utils import DataCreator, set_driver
+
+
+class WikiParser(DataCreator):
+
+    def __init__(self, storage, subdir='texts'):
+        super().__init__(storage=storage, subdir=subdir)
+        self.WIKI_API_URL = "https://en.wikipedia.org/w/api.php"
+
+
+    def get_random_wikipedia_title(self):
+        """Fetches a random Wikipedia page title."""
+        params = {
+            "action": "query",
+            "list": "random",
+            "rnnamespace": 0, # Only main articles (not Talk, User, etc.)
+            "format": "json"
+        }
+        response = requests.get(self.WIKI_API_URL, params=params).json()
+        return response["query"]["random"][0]["title"]
+
+
+    def get_sentences(self, page_title):
+        """Fetches section titles from a given Wikipedia page."""
+        params = {
+            "action": "parse",
+            "page": page_title,
+            "format": "json",
+            "prop": "text"
+        }
+        response = requests.get(self.WIKI_API_URL, params=params).json()
+        if "error" in response:
+            return [] # Skip pages with issues
+        html_content = response.get("parse", {}).get("text", {}).get("*", "")
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        return soup
+
+
+    def __call__(self, processor_config, dataset_size=10000, delay=0.05):
+        """Collects Wikipedia section titles until reaching the target count."""
+
+        self.processor = TextProcessor(processor_config)
+
+        for num in tqdm(range(dataset_size)):
+
+            # Parse and process data
+            page_title = self.get_random_wikipedia_title()
+            soup = self.get_sentences(page_title)
+            sentences = self.processor(soup)
+
+            for text in sentences:
+
+                file_name = f'title_{num}.txt'
+                self.storage.save_file(text, file_name, self.subdir)
+            time.sleep(delay) # Avoid hitting API rate limits
+        
+        # Postprocessing
+        if 'remove_frequent_tokens' in processor_config:
+            self.processor.save_state('token_counts.json')
+            self.processor.calc_probas()
+            # Read every saved file, postprocess and rewrite it
+            for file_name in tqdm(self.storage.read_all(self.subdir)):
+                text = self.storage.read_file(file_name, self.subdir, file_type='text')
+                text = self.processor.remove_frequent_tokens(text)
+                self.storage.save_file(text, file_name, self.subdir)
 
 
 class YouTubeParser:
@@ -52,73 +117,6 @@ class YouTubeParser:
         finally:
             # Close the browser
             driver.quit()
-
-
-class WikiParser:
-
-    def __init__(self, storage, subdir='texts'):
-        self.storage = storage
-        self.subdir = subdir
-        self.WIKI_API_URL = "https://en.wikipedia.org/w/api.php"
-
-
-    def get_random_wikipedia_title(self):
-        """Fetches a random Wikipedia page title."""
-        params = {
-            "action": "query",
-            "list": "random",
-            "rnnamespace": 0, # Only main articles (not Talk, User, etc.)
-            "format": "json"
-        }
-        response = requests.get(self.WIKI_API_URL, params=params).json()
-        return response["query"]["random"][0]["title"]
-
-
-    def get_sentences(self, page_title):
-        """Fetches section titles from a given Wikipedia page."""
-        params = {
-            "action": "parse",
-            "page": page_title,
-            "format": "json",
-            "prop": "text"
-        }
-        response = requests.get(self.WIKI_API_URL, params=params).json()
-        if "error" in response:
-            return [] # Skip pages with issues
-        html_content = response.get("parse", {}).get("text", {}).get("*", "")
-
-        soup = BeautifulSoup(html_content, "html.parser")
-        sentences = self.processor(soup)
-
-        return sentences
-
-
-    def __call__(self, processor_config, dataset_size=10000, delay=0.05):
-        """Collects Wikipedia section titles until reaching the target count."""
-
-        self.processor = TextProcessor(processor_config)
-
-        for num in tqdm(range(dataset_size)):
-            page_title = self.get_random_wikipedia_title()
-            sentences = self.get_sentences(page_title)
-            for text in sentences:
-
-                file_name = f'title_{num}.txt'
-
-                if self.storage.check_file_exists(file_name, self.subdir):
-                    continue
-                self.storage.save_file(text, file_name, self.subdir)
-            time.sleep(delay) # Avoid hitting API rate limits
-        
-        # Postprocessing
-        if 'remove_frequent_tokens' in processor_config:
-            self.processor.save_state('token_counts.json')
-            self.processor.calc_probas()
-            # Read every saved file, postprocess and rewrite it
-            for file_name in tqdm(self.storage.read_all(self.subdir)):
-                text = self.storage.read_file(file_name, self.subdir, file_type='text')
-                text = self.processor.remove_frequent_tokens(text)
-                self.storage.save_file(text, file_name, self.subdir)
 
 
 class AsyncWikiIterator:

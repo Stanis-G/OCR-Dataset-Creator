@@ -7,14 +7,14 @@ sys.path.append(str(parent_dir))
 
 from jinja2 import Environment, FileSystemLoader
 from layouts.layouts_utils import HTMLProcessor
+from utils.utils import DataCreator
 
 
-class HTMLCreator:
+class HTMLCreator(DataCreator):
     """Wrap text with html pages"""
     
     def __init__(self, storage, subdir='pages'):
-        self.storage = storage
-        self.subdir = subdir
+        super().__init__(storage=storage, subdir=subdir)
         self.env = Environment(
             loader=FileSystemLoader('src/layouts/templates')
         )
@@ -29,9 +29,6 @@ class HTMLCreator:
 
             num = int(file_name.split('_')[1].split('.')[0])
             page_name = f'page_{num}.html'
-
-            if self.storage.check_file_exists(page_name, self.subdir):
-                continue
             text = self.storage.read_file(file_name, texts_subdir, file_type='text')
 
             html_params = self.processor()

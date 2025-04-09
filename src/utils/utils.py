@@ -1,13 +1,20 @@
 import os
-from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 
-load_dotenv()
-MINIO_URL = os.getenv("MINIO_URL")
-MINIO_ROOT_USER = os.getenv("MINIO_ROOT_USER")
-MINIO_ROOT_PASSWORD = os.getenv("MINIO_ROOT_PASSWORD")
+from utils.storage import Storage
+
+
+class DataCreator:
+
+    def __init__(self, storage, subdir):
+        self.storage = storage
+        self.subdir = subdir
+        if not isinstance(self.storage, Storage):
+            raise TypeError('"storage" should be a subclass of "Storage"')
+        if not isinstance(self.subdir, str):
+            raise TypeError('"subdir" should be str')
 
 
 def set_driver(driver_path, download_dir=None):

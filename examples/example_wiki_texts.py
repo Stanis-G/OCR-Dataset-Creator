@@ -76,7 +76,7 @@ dataset = OCRDataset(
     parser=WikiParser,
     html_creator=HTMLCreator,
     image_creator=ImageCreator,
-    storage=S3Storage(bucket_name=dataset_name, client_config=client_config),
+    storage=S3Storage(dataset_name=dataset_name, client_config=client_config),
 )
 dataset(
     text_processor_config=text_processor_config,

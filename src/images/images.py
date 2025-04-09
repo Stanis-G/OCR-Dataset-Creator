@@ -12,16 +12,15 @@ sys.path.append(str(parent_dir))
 import os
 from urllib.request import pathname2url
 import numpy as np
-from utils.utils import set_driver
+from utils.utils import DataCreator, set_driver
 from images.image_utils import ImageProcessor
 
 
-class ImageCreator:
+class ImageCreator(DataCreator):
     """Add visual effects to image to enable OCR model recognize text in complex conditions"""
     
     def __init__(self, storage, driver_path, subdir='images'):
-        self.storage = storage
-        self.subdir = subdir
+        super().__init__(storage=storage, subdir=subdir)
         self.driver_path = driver_path
 
 
@@ -35,11 +34,7 @@ class ImageCreator:
 
             num = int(file_name.split('_')[1].split('.')[0])
             img_name = f'image_{num}.png'
-
-            # Check if image already exists
-            if self.storage.check_file_exists(img_name, self.subdir):
-                continue
-
+            
             # Get html page, inject into browser and get its url
             page = self.storage.read_file(file_name, pages_subdir, file_type='text')
             url = "data:text/html;charset=utf-8," + urllib.parse.quote(page)

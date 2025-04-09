@@ -1,39 +1,57 @@
+from abc import ABC, abstractmethod
 import os
 from io import BytesIO
 import boto3
 from botocore.config import Config
 from botocore.exceptions import ConnectionClosedError, ClientError
-from dotenv import load_dotenv
 from PIL import Image
 import time
 
-load_dotenv()
-MINIO_URL = os.getenv("MINIO_URL")
-MINIO_ROOT_USER = os.getenv("MINIO_ROOT_USER")
-MINIO_ROOT_PASSWORD = os.getenv("MINIO_ROOT_PASSWORD")
+
+class Storage(ABC):
+
+    def __init__(self, file_exists_strategy='skip'):
+        self.strategy = file_exists_strategy
 
 
-class Storage:
-
+    @abstractmethod
     def check_file_exists(self, *args, **kwargs):
         pass
     
-    def file_exists_handler(self, strategy='continue'):
-        if strategy == 'continue':
-            pass
 
+    def _file_exists_handler(self, file_name, subdir):
+        """Returns True if save_file method in subclasses should be executed"""
+        file_exists = self.check_file_exists(file_name, subdir)
+        if file_exists:
+            if self.strategy == 'skip':
+                return False 
+            elif self.strategy == 'rewrite':
+                return True
+            elif self.strategy == 'raise':
+                raise Exception(f'file "{file_name}" already exists in subdir {subdir}')
+            else:
+                raise ValueError('"strategy" should be one of the "skip", "rewrite", "raise"')
+        return True
 
 
 class LocalStorage(Storage):
     
-    def __init__(self, data_dir):
-        self.data_dir = data_dir
+    def __init__(self, dataset_name, file_exists_strategy='skip'):
+        super().__init__(file_exists_strategy=file_exists_strategy)
+        self.data_dir = dataset_name
 
 
     def save_file(self, content, file_name, subdir):
-        file_name_full = os.path.join(self.data_dir, subdir, file_name)
-        with open(file_name_full, 'w', encoding='utf-8') as f:
-            f.write(content)
+        # Decide whether file should be saved
+        if self._file_exists_handler(file_name, subdir):
+            file_name_full = os.path.join(self.data_dir, subdir, file_name)
+            if isinstance(content, str):
+                with open(file_name_full, 'w', encoding='utf-8') as f:
+                    f.write(content)
+            elif isinstance(content, Image.Image):
+                content.save(file_name_full, format='PNG')
+            else:
+                raise TypeError('Content should be one of the types: str, ImageImage')
 
 
     def read_file(self, file_name, subdir, file_type='text'):
@@ -61,8 +79,9 @@ class LocalStorage(Storage):
 
 class S3Storage(Storage):
     
-    def __init__(self, bucket_name, client_config):
-        self.bucket_name = bucket_name
+    def __init__(self, dataset_name, client_config, file_exists_strategy='skip'):
+        super().__init__(file_exists_strategy=file_exists_strategy)
+        self.bucket_name = dataset_name
         self._get_s3_client(client_config)
 
 
@@ -95,14 +114,18 @@ class S3Storage(Storage):
     
 
     def save_file(self, content, file_name, subdir):
-        if isinstance(content, str):
-            file_obj = BytesIO(content.encode("utf-8"))
-        elif isinstance(content, Image.Image):
-            file_obj = BytesIO()
-            content.save(file_obj, format='PNG')
-            file_obj.seek(0)
-        file_name_full = f'{subdir}/{file_name}'
-        self.s3.upload_fileobj(file_obj, self.bucket_name, file_name_full)
+        # Decide whether file should be saved
+        if self._file_exists_handler(file_name, subdir):
+            if isinstance(content, str):
+                file_obj = BytesIO(content.encode("utf-8"))
+            elif isinstance(content, Image.Image):
+                file_obj = BytesIO()
+                content.save(file_obj, format='PNG')
+                file_obj.seek(0)
+            else:
+                raise TypeError('Content should be one of the types: str, ImageImage')
+            file_name_full = f'{subdir}/{file_name}'
+            self.s3.upload_fileobj(file_obj, self.bucket_name, file_name_full)
 
 
     def read_file(self, file_name, subdir, file_type='text'):
