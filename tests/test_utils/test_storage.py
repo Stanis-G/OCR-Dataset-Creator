@@ -109,3 +109,30 @@ def test_local_save_and_read_image(subdir, create_file, temp_storage):
             assert buf_img_read.getvalue() == buf_img.getvalue()
         else:
             assert buf_img_read.getvalue() == buf_img_init.getvalue()
+
+
+@pytest.mark.parametrize("temp_storage", [
+    ("local", "rewrite"),
+    ("local", "skip"),
+    ("s3", "rewrite"),
+    ("s3", "skip"),
+], indirect=True)
+def test_read_all_and_delete(temp_storage):
+    storage = temp_storage
+    subdir = 'text_subdir'
+
+    num_files = 10
+    for i in range(num_files):
+        content = f'test_{i}'
+        file_name = f'{content}.txt'
+        storage.save_file(content, file_name, subdir)
+
+    files = storage.read_all(subdir)
+    assert isinstance(files, list)
+    assert len(files) == num_files
+    for file in files:
+        assert file.split('_')[0] == 'test'
+        storage.delete_file(file, subdir)
+    
+    files_empty = storage.read_all(subdir)
+    assert not files_empty

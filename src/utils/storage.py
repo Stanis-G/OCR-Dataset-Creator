@@ -143,7 +143,7 @@ class S3Storage(Storage):
         """Get file by name"""
 
         # Read file
-        file_name_full = f'{subdir}/{file_name}' if not file_name.startswith(subdir) else file_name
+        file_name_full = f'{subdir}/{file_name}'
         response = self.s3.get_object(Bucket=self.bucket_name, Key=file_name_full)
         file_data = response['Body'].read()
 
@@ -165,7 +165,7 @@ class S3Storage(Storage):
         paginator = self.s3.get_paginator("list_objects_v2")
         for page in paginator.paginate(Bucket=self.bucket_name, Prefix=subdir, PaginationConfig={'PageSize': page_size}):
             objects.extend(obj["Key"] for obj in page.get("Contents", []))
-        return objects
+        return [obj.split('/')[-1] for obj in objects]
 
 
     def check_file_exists(self, file_name, subdir):
