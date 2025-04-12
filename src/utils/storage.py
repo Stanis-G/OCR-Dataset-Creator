@@ -28,9 +28,9 @@ class Storage(ABC):
             elif self.strategy == 'rewrite':
                 return True
             elif self.strategy == 'raise':
-                raise FileExistsError(f'File "{file_name}" already exists in subdir {subdir}')
+                raise FileExistsError(f'File "{file_name}" already exists in subdir "{subdir}"')
             else:
-                raise ValueError('"strategy" should be one of the "skip", "rewrite", "raise"')
+                raise ValueError(f'"strategy" should be one of the "skip", "rewrite", "raise", got "{self.strategy}"')
         return True
 
 
@@ -80,6 +80,12 @@ class LocalStorage(Storage):
     def check_file_exists(self, file_name, subdir):
         file_name_full = os.path.join(self.data_dir, subdir, file_name)
         return os.path.exists(file_name_full)
+    
+
+    def delete_file(self, file_name, subdir):
+        if self.check_file_exists(file_name, subdir):
+            file_name_full = os.path.join(self.data_dir, subdir, file_name)
+            os.remove(file_name_full)
 
 
 class S3Storage(Storage):
@@ -172,3 +178,9 @@ class S3Storage(Storage):
             if e.response["Error"]["Code"] == "404":
                 return False # File does not exist
             raise # Raise other errors
+
+    
+    def delete_file(self, file_name, subdir):
+        if self.check_file_exists(file_name, subdir):
+            file_name_full = f"{subdir}/{file_name}"
+            self.s3.delete_object(Bucket=self.bucket_name, Key=file_name_full)
