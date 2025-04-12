@@ -28,7 +28,7 @@ class Storage(ABC):
             elif self.strategy == 'rewrite':
                 return True
             elif self.strategy == 'raise':
-                raise Exception(f'file "{file_name}" already exists in subdir {subdir}')
+                raise FileExistsError(f'File "{file_name}" already exists in subdir {subdir}')
             else:
                 raise ValueError('"strategy" should be one of the "skip", "rewrite", "raise"')
         return True
@@ -44,7 +44,12 @@ class LocalStorage(Storage):
     def save_file(self, content, file_name, subdir):
         # Decide whether file should be saved
         if self._file_exists_handler(file_name, subdir):
-            file_name_full = os.path.join(self.data_dir, subdir, file_name)
+            
+            # Create subdir if it doesn't exist
+            subdir_path = os.path.join(self.data_dir, subdir)
+            os.makedirs(subdir_path, exist_ok=True)
+
+            file_name_full = os.path.join(subdir_path, file_name)
             if isinstance(content, str):
                 with open(file_name_full, 'w', encoding='utf-8') as f:
                     f.write(content)

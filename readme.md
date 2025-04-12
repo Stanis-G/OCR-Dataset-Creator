@@ -29,4 +29,3 @@ The considerations include:
 7. Add bounding boxes aroung text blocks in images for detection models
 8. Get rid of driver
 9. Create storage for background images
-10. Fix insertion of backgroung images into a template when making screenshot

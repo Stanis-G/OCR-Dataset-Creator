@@ -21,7 +21,7 @@ class ImageProcessor:
     def __call__(self, img):
         img = Image.open(BytesIO(img))
         img = np.array(img)
-        for method_name, params in zip(self.config['methods'], self.config['params']):
+        for method_name, params in self.config.items():
             if method_name in self.methods:
                 img = self.methods[method_name](img, **params)
             else:

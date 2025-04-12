@@ -52,23 +52,20 @@ html_processor_config = {
     'left': (5, 75),
 }
 image_processor_config = {
-    'methods': ['add_random_glare', 'random_blur', 'random_resize'],
-    'params': [
-        dict(
-            center_range=(0, 1),
-            glare_relative_radius_range=(0.1, 0.5),
-            glare_intensity_range=(0.1, 0.5),
-            blur_strength_range=(121, 251),
-        ),
-        dict(
-            blur_type_values=('avg', 'median', 'gaussian'),
-            ksize_range=(3, 8),
-        ),
-        dict(
-            width_range=(500, 1500),
-            height_range=(500, 1500),
-        ),
-    ],
+    'add_random_glare': dict(
+        center_range=(0, 1),
+        glare_relative_radius_range=(0.1, 0.5),
+        glare_intensity_range=(0.1, 0.5),
+        blur_strength_range=(121, 251),
+    ),
+    'random_blur': dict(
+        blur_type_values=('avg', 'median', 'gaussian'),
+        ksize_range=(3, 8),
+    ),
+    'radnom_resize': dict(
+        width_range=(500, 1500),
+        height_range=(500, 1500),
+    ),
 }
 
 dataset = OCRDataset(
