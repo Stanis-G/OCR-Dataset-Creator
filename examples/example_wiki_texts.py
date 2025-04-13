@@ -66,6 +66,13 @@ image_processor_config = {
         width_range=(500, 1500),
         height_range=(500, 1500),
     ),
+    'add_random_gaussian_noise': dict(
+        mean_range=(0, 10),
+        std_range=(0, 10),
+    ),
+    'add_random_impulse_noise': dict(
+        proba_range=(0, 0.05),
+    ),
 }
 
 dataset = OCRDataset(

@@ -14,7 +14,11 @@ class ImageProcessor:
             'add_random_glare': self.add_random_glare,
             'blur': self.blur,
             'random_blur': self.random_blur,
-            'random_resize': self.random_resize
+            'random_resize': self.random_resize,
+            'add_gaussian_noise': self.add_gaussian_noise,
+            'add_random_gaussian_noise': self.add_random_gaussian_noise,
+            'add_impulse_noise': self.add_impulse_noise,
+            'add_random_impulse_noise': self.add_random_impulse_noise,
         }
 
     
@@ -106,3 +110,30 @@ class ImageProcessor:
         img = Image.fromarray(img)
         img = img.resize(shape_new)
         return np.array(img)
+    
+
+    def add_gaussian_noise(self, img, mean=0, std=0.1):
+        noise = np.random.normal(mean, std, img.shape).astype('uint8')
+        img = cv2.add(img, noise)
+        return img
+    
+    
+    def add_random_gaussian_noise(self, img, mean_range, std_range):
+        mean = random.uniform(*mean_range)
+        std = random.uniform(*std_range)
+        img = self.add_gaussian_noise(img, mean, std)
+        return img
+    
+
+    def add_impulse_noise(self, img, proba=0.01):
+        black_mask = (np.random.rand(*img.shape[:2]) < proba) # mask of pixels to become black
+        white_mask = (np.random.rand(*img.shape[:2]) < proba) # mask of pixels to become white
+        img[black_mask] = [0, 0, 0]
+        img[white_mask] = [255, 255, 255]
+        return img
+    
+
+    def add_random_impulse_noise(self, img, proba_range):
+        proba = random.uniform(*proba_range)
+        img = self.add_impulse_noise(img, proba)
+        return img
