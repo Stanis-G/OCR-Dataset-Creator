@@ -37,7 +37,7 @@ text_processor_config = {
     'remove_latex': {},
     'strip_sentences': {},
     'remove_short_sentences': {'min_len': 3},
-    'remove_frequent_tokens': {},
+    'update_token_counts': {},
 }
 html_processor_config = {
     'get_bg_images': dict(

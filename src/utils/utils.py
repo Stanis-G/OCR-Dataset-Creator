@@ -26,9 +26,9 @@ class BaseProcessor:
         
         
     def __call__(self, obj=None):
-        for method_name, method in self.methods:
+        for method_name, method in self.methods.items():
             if method_name in self.config or method_name in self.necessary_methods:
-                params = self.config[method_name]
+                params = self.config.get(method_name) or {}
                 if object is not None:
                     obj = method(obj, **params)
                 else:

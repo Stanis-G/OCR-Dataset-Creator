@@ -35,7 +35,7 @@ class WikiParser(DataCreator):
         return response["query"]["random"][0]["title"]
 
 
-    def get_sentences(self, page_title):
+    def get_soup(self, page_title):
         """Fetches section titles from a given Wikipedia page."""
         params = {
             "action": "parse",
@@ -61,7 +61,7 @@ class WikiParser(DataCreator):
 
             # Parse and process data
             page_title = self.get_random_wikipedia_title()
-            soup = self.get_sentences(page_title)
+            soup = self.get_soup(page_title)
             sentences = self.processor(soup)
 
             for text in sentences:

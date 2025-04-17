@@ -29,7 +29,7 @@ class TextProcessor(BaseProcessor):
             'remove_latex': self.remove_latex,
             'strip_sentences': self.strip_sentences,
             'remove_short_sentences': self.remove_short_sentences,
-            'remove_frequent_tokens': self.remove_frequent_tokens,
+            'update_token_counts': self.update_token_counts,
         })
         self.necessary_methods = ['extract_text', 'split_into_sentences']
     

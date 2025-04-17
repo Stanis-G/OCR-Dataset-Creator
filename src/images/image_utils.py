@@ -25,7 +25,7 @@ class ImageProcessor(BaseProcessor):
 
     
     def __call__(self, img):
-        img = Image.open(BytesIO(img))
+        # img = Image.open(BytesIO(img))
         img = np.array(img)
         img = super().__call__(img)
         img = Image.fromarray(img)
@@ -103,7 +103,7 @@ class ImageProcessor(BaseProcessor):
         return img
     
 
-    def random_resize(self, img, width_range, height_range):
+    def random_resize(self, img, width_range=(500, 1500), height_range=(500, 1500)):
         shape_new = random.randint(*width_range), random.randint(*height_range)
         img = Image.fromarray(img)
         img = img.resize(shape_new)
@@ -116,7 +116,7 @@ class ImageProcessor(BaseProcessor):
         return img
     
     
-    def add_random_gaussian_noise(self, img, mean_range, std_range):
+    def add_random_gaussian_noise(self, img, mean_range=(0, 10), std_range=(0, 10)):
         mean = random.uniform(*mean_range)
         std = random.uniform(*std_range)
         img = self.add_gaussian_noise(img, mean, std)
@@ -131,7 +131,7 @@ class ImageProcessor(BaseProcessor):
         return img
     
 
-    def add_random_impulse_noise(self, img, proba_range):
+    def add_random_impulse_noise(self, img, proba_range=(0, 0.05)):
         proba = random.uniform(*proba_range)
         img = self.add_impulse_noise(img, proba)
         return img

@@ -3,7 +3,7 @@ import os
 import random
 
 from utils.utils import BaseProcessor
-from src.layouts.config import FONTS, COLORS
+from layouts.config import FONTS, COLORS
 
 
 class HTMLProcessor(BaseProcessor):
@@ -77,13 +77,14 @@ class HTMLProcessor(BaseProcessor):
         is_text_highlighted = random.uniform(0, 1) < proba
         if is_text_highlighted:
             text_highlight_color = random.choice(colors)
-            while text_highlight_color == self.params['bg_color'] or text_highlight_color == self.params['text_color']:
+            while text_highlight_color == params['bg_color'] or text_highlight_color == params['text_color']:
                 text_highlight_color = random.choice(colors)
 
             highlight_padding_height=random.randint(*highlight_padding_range)
             highlight_padding_width=random.randint(*highlight_padding_range)
             hihglight_rounding=random.randint(*highlight_rounding_range),
         else:
+            text_highlight_color = ""
             highlight_padding_height = ""
             highlight_padding_width = ""
             hihglight_rounding = ""

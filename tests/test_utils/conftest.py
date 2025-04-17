@@ -1,21 +1,14 @@
 import os
-import tempfile
 from moto import mock_aws
 from contextlib import contextmanager
 import pytest
 from dotenv import load_dotenv
-from utils.storage import LocalStorage, S3Storage
+from utils.storage import S3Storage
 load_dotenv()
 
 
 @contextmanager
-def local_storage_fixture(strategy):
-    with tempfile.TemporaryDirectory() as tmpdir:
-        storage = LocalStorage(tmpdir, file_exists_strategy=strategy)
-        yield storage
-
-@contextmanager
-def s3_storage_fixture(strategy):
+def s3_storage(strategy):
     client_config = dict(
         endpoint_url=os.getenv("MINIO_URL"),
         aws_access_key_id=os.getenv("MINIO_ROOT_USER"),
@@ -36,11 +29,12 @@ def s3_storage_fixture(strategy):
     ("s3", "raise"),
     ("s3", "invalid"),
 ])
-def temp_storage(request):
+def temp_storage(request, local_storage):
     backend, strategy = request.param
     if backend == "local":
-        with local_storage_fixture(strategy) as storage:
-            yield storage
+        storage = local_storage
+        storage.strategy = strategy
+        yield storage
     elif backend == "s3":
-        with s3_storage_fixture(strategy) as storage:
+        with s3_storage(strategy) as storage:
             yield storage
