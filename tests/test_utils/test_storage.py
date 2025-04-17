@@ -39,7 +39,7 @@ def test_file_exists_handler(create_file, temp_storage):
     ('texts', True),
     ('text_dir', True),
 ])
-def test_local_save_and_read_text(subdir, create_file, temp_storage):
+def test_save_and_read_text(subdir, create_file, temp_storage):
     storage = temp_storage
 
     file_name = 'test.txt'
@@ -74,7 +74,7 @@ def test_local_save_and_read_text(subdir, create_file, temp_storage):
     ('images', True),
     ('images_dir', True),
 ])
-def test_local_save_and_read_image(subdir, create_file, temp_storage):
+def test_save_and_read_image(subdir, create_file, temp_storage):
     storage = temp_storage
 
     file_name = 'test.png'

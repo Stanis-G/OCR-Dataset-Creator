@@ -4,11 +4,13 @@ import numpy as np
 import random
 from PIL import Image
 
+from utils.utils import BaseProcessor
 
-class ImageProcessor:
+
+class ImageProcessor(BaseProcessor):
 
     def __init__(self, config):
-        self.config = config
+        super().__init__(config)
         self.methods = {
             'add_glare': self.add_glare,
             'add_random_glare': self.add_random_glare,
@@ -25,11 +27,7 @@ class ImageProcessor:
     def __call__(self, img):
         img = Image.open(BytesIO(img))
         img = np.array(img)
-        for method_name, params in self.config.items():
-            if method_name in self.methods:
-                img = self.methods[method_name](img, **params)
-            else:
-                raise ValueError(f"Unknown processing method: {method_name}")
+        img = super().__call__(img)
         img = Image.fromarray(img)
         return img
 

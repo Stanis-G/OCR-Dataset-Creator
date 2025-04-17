@@ -71,7 +71,7 @@ class WikiParser(DataCreator):
             time.sleep(delay) # Avoid hitting API rate limits
         
         # Postprocessing
-        if 'remove_frequent_tokens' in processor_config:
+        if 'update_token_counts' in processor_config:
             self.processor.save_state('token_counts.json')
             self.processor.calc_probas()
             # Read every saved file, postprocess and rewrite it

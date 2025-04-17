@@ -40,16 +40,27 @@ text_processor_config = {
     'remove_frequent_tokens': {},
 }
 html_processor_config = {
-    'bg_images': 'bg_images',
-    'bg_colors': COLORS,
-    'text_colors': COLORS,
-    'text_highlight_colors': COLORS,
-    'highlight_padding': (1, 30),
-    'highlight_rounding': (1, 15),
-    'fonts': FONTS,
-    'font_size': (20, 45),
-    'top': (5, 75),
-    'left': (5, 75),
+    'get_bg_images': dict(
+        bg_images='bg_images',
+        proba=0.5,
+    ),
+    'get_colors': dict(
+        colors=COLORS,
+    ),
+    'get_font': dict(
+        font_size_range=(20, 40),
+        fonts=FONTS,
+    ),
+    'get_text_position': dict(
+        top_range=(5, 75),
+        left_range=(5, 75),
+    ),
+    'get_hihglight_params': dict(
+        colors=COLORS,
+        proba=0.5,
+        highlight_padding_range=(1, 30),
+        highlight_rounding_range=(1, 15),
+    ),
 }
 image_processor_config = {
     'add_random_glare': dict(

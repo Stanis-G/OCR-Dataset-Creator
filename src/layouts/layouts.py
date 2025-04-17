@@ -31,7 +31,7 @@ class HTMLCreator(DataCreator):
             page_name = f'page_{num}.html'
             text = self.storage.read_file(file_name, texts_subdir, file_type='text')
 
-            html_params = self.processor()
+            html_params = self.processor({})
             html_page = template.render(text=text, **html_params)
 
             # Save page

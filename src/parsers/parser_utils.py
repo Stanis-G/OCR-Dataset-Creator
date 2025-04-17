@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import json
 import nltk
 from nltk import FreqDist, word_tokenize
@@ -9,36 +10,28 @@ from pathlib import Path
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 
+from utils.utils import BaseProcessor
 
-class TextProcessor:
+
+class TextProcessor(BaseProcessor):
 
     def __init__(self, config):
-        self.config = config
+        super().__init__(config)
         self.token_counts = FreqDist()
         self.proba_dct = {}
         nltk.download('punkt_tab')
-
-
-    def __call__(self, soup):
-        if 'remove_section_headers' in self.config:
-            soup = self.remove_section_headers(soup)
-        text = self.extract_text(soup)
-        if 'remove_non_ascii_symbols' in self.config:
-            text = self.remove_non_ascii_symbols(text)
-        if 'remove_references' in self.config:
-            text = self.remove_references(text)
-        sentence_lst = self.split_into_sentences(text)
-        if 'remove_latex' in self.config:
-            sentence_lst = self.remove_latex(sentence_lst)
-        if 'strip_sentences' in self.config:
-            sentence_lst = self.strip_sentences(sentence_lst)
-        if 'remove_short_sentences' in self.config:
-            sentence_lst = self.remove_short_sentences(sentence_lst, **self.config['remove_short_sentences'])
-        if 'remove_frequent_tokens' in self.config:
-            for sentence in sentence_lst:
-                tokens = word_tokenize(sentence)
-            self.token_counts.update(tokens)
-        return sentence_lst
+        self.methods = OrderedDict({
+            'remove_section_headers': self.remove_section_headers,
+            'extract_text': self.extract_text,
+            'remove_non_ascii_symbols': self.remove_non_ascii_symbols,
+            'remove_references': self.remove_references,
+            'split_into_sentences': self.split_into_sentences,
+            'remove_latex': self.remove_latex,
+            'strip_sentences': self.strip_sentences,
+            'remove_short_sentences': self.remove_short_sentences,
+            'remove_frequent_tokens': self.remove_frequent_tokens,
+        })
+        self.necessary_methods = ['extract_text', 'split_into_sentences']
     
 
     def save_state(self, file_name):
@@ -61,6 +54,14 @@ class TextProcessor:
         for token, count in self.token_counts.items():
             proba_to_remove = max(0, 1 - mean_count / count)
             self.proba_dct.update({token: proba_to_remove})
+
+    
+    def update_token_counts(self, sentences):
+        """Accumulate token counts"""
+        for sentence in sentences:
+            tokens = word_tokenize(sentence)
+        self.token_counts.update(tokens)
+        return sentences
 
 
     def remove_frequent_tokens(self, sentence):

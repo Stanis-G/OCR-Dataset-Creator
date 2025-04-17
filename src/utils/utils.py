@@ -15,6 +15,25 @@ class DataCreator:
             raise TypeError('"storage" should be a subclass of "Storage"')
         if not isinstance(self.subdir, str):
             raise TypeError('"subdir" should be str')
+        
+
+class BaseProcessor:
+
+    def __init__(self, config):
+        self.config = config
+        self.methods = {}
+        self.necessary_methods = []
+        
+        
+    def __call__(self, obj=None):
+        for method_name, method in self.methods:
+            if method_name in self.config or method_name in self.necessary_methods:
+                params = self.config[method_name]
+                if object is not None:
+                    obj = method(obj, **params)
+                else:
+                    method(**params)
+        return obj
 
 
 def set_driver(driver_path, download_dir=None):
