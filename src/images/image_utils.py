@@ -33,6 +33,12 @@ class ImageProcessor(BaseProcessor):
 
 
     def add_glare(self, img, center=(0.5, 0.5), glare_relative_radius=0.3, glare_intensity=0.4, blur_strength=121):
+
+        if blur_strength % 2 == 0:
+            blur_strength += 1
+        center = [max(0, i) for i in center]
+        blur_strength = abs(blur_strength)
+
         # Create black-white circle mask of specified size
         glare = np.zeros_like(img)
         radius = int(min(img.shape[:2]) * glare_relative_radius)
@@ -59,13 +65,18 @@ class ImageProcessor(BaseProcessor):
     ):
 
         if random.randint(0, 1):
+            # Check values
+            center_range = [abs(i) for i in center_range]
+            glare_relative_radius_range = [abs(i) for i in glare_relative_radius_range]
+            glare_intensity_range = [abs(i) for i in glare_intensity_range]
+            blur_strength_range = [abs(i) for i in blur_strength_range]
+
+            # Generate glare params
             center = (random.uniform(*center_range), random.uniform(*center_range))
             glare_relative_radius = random.uniform(*glare_relative_radius_range)
             glare_intensity = random.uniform(*glare_intensity_range)
             # glare_intensity multiplier regulates blur in respect to brightness (so there will be no suns in images)
             blur_strength = int(random.randint(*blur_strength_range) * (1 + glare_intensity))
-            if blur_strength % 2 == 0:
-                blur_strength += 1
             return self.add_glare(img, center, glare_relative_radius, glare_intensity, blur_strength)
         return img
 
@@ -104,6 +115,9 @@ class ImageProcessor(BaseProcessor):
     
 
     def random_resize(self, img, width_range=(500, 1500), height_range=(500, 1500)):
+        width_range = (min(width_range), max(width_range))
+        height_range = (min(height_range), max(height_range))
+
         shape_new = random.randint(*width_range), random.randint(*height_range)
         img = Image.fromarray(img)
         img = img.resize(shape_new)
