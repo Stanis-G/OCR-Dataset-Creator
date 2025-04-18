@@ -17,6 +17,18 @@ def get_soup(local_storage):
 
 
 @pytest.fixture
+def get_text():
+    return """{\\displaystile Zoë enjoys hiking in the Swiss Alps.
+            She said, 'C'était une expérience inoubliable!'
+            Later, she shared her journey online: '¡Gracias a todos por el apoyo!'[5]"""
+
+
+@pytest.fixture
+def get_sentences():
+    return [' Hi', 'How are you? ']
+
+
+@pytest.fixture
 def text_processor_config():
     config = {
         'remove_section_headers': {},
