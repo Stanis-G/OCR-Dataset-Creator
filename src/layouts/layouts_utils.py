@@ -15,7 +15,7 @@ class HTMLProcessor(BaseProcessor):
             'get_colors': self.get_colors,
             'get_font': self.get_font,
             'get_text_position': self.get_text_position,
-            'get_hihglight_params': self.get_hihglight_params,
+            'get_highlight_params': self.get_highlight_params,
         })
 
     
@@ -28,13 +28,13 @@ class HTMLProcessor(BaseProcessor):
         is_bg_image = random.uniform(0, 1) < proba
         if is_bg_image and bg_images:
             if isinstance(bg_images, str):
-                # Treat config like local path to bg images
+                # Treat bg_images like local path to bg images
                 bg_name = random.choice(os.listdir(bg_images))
                 bg_path = os.path.abspath(os.path.join(bg_images, bg_name))
                 bg_path = bg_path.replace("\\", "/")
                 bg_image_url = f'file://{bg_path}'
             elif isinstance(bg_images, list):
-                # If config is a list of urls
+                # If bg_images is a list of urls
                 bg_image_url = random.choice(bg_images)
             else:
                 raise TypeError('bg_images should be "None", "str" or "list"')
@@ -72,7 +72,7 @@ class HTMLProcessor(BaseProcessor):
         return params
 
 
-    def get_hihglight_params(self, params, colors=COLORS, proba=0.5, highlight_padding_range=(1, 30), highlight_rounding_range=(1, 15)):
+    def get_highlight_params(self, params, colors=COLORS, proba=0.5, highlight_padding_range=(1, 30), highlight_rounding_range=(1, 15)):
         """Set highlight color, size and rounding"""
         is_text_highlighted = random.uniform(0, 1) < proba
         if is_text_highlighted:
@@ -82,15 +82,15 @@ class HTMLProcessor(BaseProcessor):
 
             highlight_padding_height=random.randint(*highlight_padding_range)
             highlight_padding_width=random.randint(*highlight_padding_range)
-            hihglight_rounding=random.randint(*highlight_rounding_range),
+            highlight_rounding=random.randint(*highlight_rounding_range),
         else:
             text_highlight_color = ""
             highlight_padding_height = ""
             highlight_padding_width = ""
-            hihglight_rounding = ""
+            highlight_rounding = ""
 
         params['text_highlight_color'] = text_highlight_color
         params['highlight_padding_height'] = highlight_padding_height
         params['highlight_padding_width'] = highlight_padding_width
-        params['hihglight_rounding'] = hihglight_rounding
+        params['highlight_rounding'] = highlight_rounding
         return params
