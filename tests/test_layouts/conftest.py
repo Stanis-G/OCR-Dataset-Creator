@@ -1,6 +1,6 @@
 import pytest
 
-from layouts.config import COLORS, FONTS
+from src.layouts.config import COLORS, FONTS
 
 
 @pytest.fixture

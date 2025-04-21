@@ -2,7 +2,7 @@ import pytest
 import tempfile
 from contextlib import contextmanager
 
-from utils.storage import LocalStorage
+from src.utils.storage import LocalStorage
 
 
 @contextmanager

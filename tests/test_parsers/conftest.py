@@ -2,7 +2,7 @@ from itertools import permutations
 import pytest
 import random
 
-from parsers.parsers import WikiParser
+from src.parsers.parsers import WikiParser
 
 
 @pytest.fixture

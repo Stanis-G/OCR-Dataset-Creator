@@ -2,7 +2,7 @@ import io
 import numpy as np
 import pytest
 
-from images.image_utils import ImageProcessor
+from src.images.image_utils import ImageProcessor
 
 
 def test_ImageProcessor_call_without_params(get_image, image_processor_config_without_params):
@@ -11,7 +11,7 @@ def test_ImageProcessor_call_without_params(get_image, image_processor_config_wi
     processor = ImageProcessor(config=config)
 
     img = get_image
-    img_out = processor(img)
+    img_out = processor(img, bytes_like=False)
 
     buf, buf_out = io.BytesIO(), io.BytesIO()
     img.save(buf, format='PNG')
@@ -26,7 +26,7 @@ def test_ImageProcessor_call_with_params(get_image, image_processor_config_with_
     processor = ImageProcessor(config=config)
 
     img = get_image
-    img_out = processor(img)
+    img_out = processor(img, bytes_like=False)
 
     buf, buf_out = io.BytesIO(), io.BytesIO()
     img.save(buf, format='PNG')

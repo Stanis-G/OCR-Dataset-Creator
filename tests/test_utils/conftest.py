@@ -3,7 +3,7 @@ from moto import mock_aws
 from contextlib import contextmanager
 import pytest
 from dotenv import load_dotenv
-from utils.storage import S3Storage
+from src.utils.storage import S3Storage
 load_dotenv()
 
 

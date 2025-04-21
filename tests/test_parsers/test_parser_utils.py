@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import pytest
 
-from parsers.parser_utils import TextProcessor
+from src.parsers.parser_utils import TextProcessor
 
 
 def test_fully_configured_TextProcessor_call(get_soup, text_processor_config):

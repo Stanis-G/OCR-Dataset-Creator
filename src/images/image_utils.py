@@ -4,7 +4,15 @@ import numpy as np
 import random
 from PIL import Image
 
-from utils.utils import BaseProcessor
+from src.utils.utils import BaseProcessor
+
+
+def get_yolo_bounding_box(coords, canvas_width, canvas_height):
+    x_center = (coords['left'] + coords['width'] / 2) / canvas_width
+    y_center = (coords['top'] + coords['height'] / 2) / canvas_height
+    width = coords['width'] / canvas_width
+    height = coords['height'] / canvas_height
+    return f"0 {x_center} {y_center} {width} {height}"
 
 
 class ImageProcessor(BaseProcessor):
@@ -24,8 +32,9 @@ class ImageProcessor(BaseProcessor):
         }
 
     
-    def __call__(self, img):
-        # img = Image.open(BytesIO(img))
+    def __call__(self, img, bytes_like=True):
+        if bytes_like:
+            img = Image.open(BytesIO(img))
         img = np.array(img)
         img = super().__call__(img)
         img = Image.fromarray(img)

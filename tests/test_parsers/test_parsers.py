@@ -1,7 +1,7 @@
 import pytest
 from bs4 import BeautifulSoup
-from utils.storage import LocalStorage
-from parsers.parsers import WikiParser
+from src.utils.storage import LocalStorage
+from src.parsers.parsers import WikiParser
 
 
 def test_get_random_wikipedia_title_and_get_sentences():

@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 
-from .storage import Storage
+from src.utils.storage import Storage
 
 
 class DataCreator:

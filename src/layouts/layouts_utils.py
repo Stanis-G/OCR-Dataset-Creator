@@ -2,8 +2,8 @@ from collections import OrderedDict
 import os
 import random
 
-from utils.utils import BaseProcessor
-from layouts.config import FONTS, COLORS
+from src.utils.utils import BaseProcessor
+from src.layouts.config import FONTS, COLORS
 
 
 class HTMLProcessor(BaseProcessor):

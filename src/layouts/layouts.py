@@ -27,12 +27,14 @@ class HTMLCreator(DataCreator):
         template = self.env.get_template('base.html')
         for file_name in tqdm(self.storage.read_all(texts_subdir)):
 
-            num = int(file_name.split('_')[1].split('.')[0])
-            page_name = f'page_{num}.html'
+            # Get text file to place into template
             text = self.storage.read_file(file_name, texts_subdir, file_type='text')
 
+            # Render template
             html_params = self.processor({})
             html_page = template.render(text=text, **html_params)
 
             # Save page
+            num = int(file_name.split('_')[1].split('.')[0])
+            page_name = f'page_{num}.html'
             self.storage.save_file(html_page, page_name, self.subdir)

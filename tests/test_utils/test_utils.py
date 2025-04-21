@@ -1,7 +1,7 @@
 import pytest
 
-from utils.storage import LocalStorage
-from utils.utils import DataCreator
+from src.utils.storage import LocalStorage
+from src.utils.utils import DataCreator
 
 
 @pytest.mark.parametrize("subdir,storage", [

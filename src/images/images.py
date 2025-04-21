@@ -1,5 +1,6 @@
 import asyncio
 from io import BytesIO
+import json
 import sys
 from tqdm import tqdm
 from pathlib import Path
@@ -13,15 +14,16 @@ import os
 from urllib.request import pathname2url
 import numpy as np
 from utils.utils import DataCreator, set_driver
-from images.image_utils import ImageProcessor
+from images.image_utils import ImageProcessor, get_yolo_bounding_box
 
 
 class ImageCreator(DataCreator):
     """Add visual effects to image to enable OCR model recognize text in complex conditions"""
     
-    def __init__(self, storage, driver_path, subdir='images'):
+    def __init__(self, storage, driver_path, subdir='images', bbox_subdir=None):
         super().__init__(storage=storage, subdir=subdir)
         self.driver_path = driver_path
+        self.bbox_subdir = bbox_subdir
 
 
     def __call__(self, processor_config, pages_subdir):
@@ -31,9 +33,6 @@ class ImageCreator(DataCreator):
         driver = set_driver(self.driver_path)
 
         for file_name in tqdm(self.storage.read_all(pages_subdir)):
-
-            num = int(file_name.split('_')[1].split('.')[0])
-            img_name = f'image_{num}.png'
             
             # Get html page, inject into browser and get its url
             page = self.storage.read_file(file_name, pages_subdir, file_type='text')
@@ -45,10 +44,26 @@ class ImageCreator(DataCreator):
 
             # Take and preprocess a screenshot
             img = driver.get_screenshot_as_png()
-            img = self.processor(img)
+            img = self.processor(img, bytes_like=True)
 
             # Save image
+            num = int(file_name.split('_')[1].split('.')[0])
+            img_name = f'image_{num}.png'
             self.storage.save_file(img, img_name, self.subdir)
+
+            if self.bbox_subdir:
+                # Get bounding box coordinates and canvas sizes
+                js_script_path = os.path.join('src', 'images', 'js', 'get_bbox_coords.js')
+                with open(js_script_path, 'r') as f:
+                    js_script = f.read()
+                coords = driver.execute_script(js_script)
+                width = driver.execute_script("return document.documentElement.scrollWidth")
+                height = driver.execute_script("return document.documentElement.scrollHeight")
+
+                # Calculate bounding box in YOLO format
+                coords_yolo = get_yolo_bounding_box(coords, width, height)
+                bbox_name = f'box_{num}.txt'
+                self.storage.save_file(coords_yolo, bbox_name, self.bbox_subdir)
 
 
 class AsyncImageIterator:

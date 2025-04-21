@@ -1,7 +1,7 @@
 from PIL import Image
 from io import BytesIO
 import pytest
-from utils.storage import Storage
+from src.utils.storage import Storage
 
 
 def test_Storage_init():

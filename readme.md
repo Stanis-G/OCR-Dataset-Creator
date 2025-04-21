@@ -20,7 +20,7 @@ Contains examples of using for different parsers. Some examples are inconsistent
 
 # Considerations
 The considerations include:
-1. Add tests
+1. Add tests for Dataset and DataCreator subclasses
 2. Refine async classes
 3. Extend processing functions
 4. Add support for more tokenizers

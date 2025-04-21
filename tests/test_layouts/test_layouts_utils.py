@@ -1,7 +1,7 @@
 import pytest
 
-from layouts.layouts_utils import HTMLProcessor
-from layouts.config import BACKGROUND_IMAGES, COLORS, FONTS
+from src.layouts.layouts_utils import HTMLProcessor
+from src.layouts.config import BACKGROUND_IMAGES, COLORS, FONTS
 
 
 def test_HTMLProcessor_call_without_params(html_processor_config_without_params):
