@@ -1,6 +1,5 @@
 import asyncio
 from io import BytesIO
-import json
 import sys
 from tqdm import tqdm
 from pathlib import Path
@@ -48,8 +47,8 @@ class ImageCreator(DataCreator):
 
             # Save image
             num = int(file_name.split('_')[1].split('.')[0])
-            img_name = f'image_{num}.png'
-            self.storage.save_file(img, img_name, self.subdir)
+            img_name = f'image_{num}'
+            self.storage.save_file(img, f'{img_name}.png', self.subdir)
 
             if self.bbox_subdir:
                 # Get bounding box coordinates and canvas sizes
@@ -60,10 +59,10 @@ class ImageCreator(DataCreator):
                 width = driver.execute_script("return document.documentElement.scrollWidth")
                 height = driver.execute_script("return document.documentElement.scrollHeight")
 
-                # Calculate bounding box in YOLO format
+                # Calculate bounding box in YOLO format and
+                # save under the image name for ultralytics dataset consistency
                 coords_yolo = get_yolo_bounding_box(coords, width, height)
-                bbox_name = f'box_{num}.txt'
-                self.storage.save_file(coords_yolo, bbox_name, self.bbox_subdir)
+                self.storage.save_file(coords_yolo, f'{img_name}.txt', self.bbox_subdir)
 
 
 class AsyncImageIterator:

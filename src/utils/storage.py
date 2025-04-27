@@ -4,6 +4,7 @@ from io import BytesIO
 import boto3
 from botocore.config import Config
 from botocore.exceptions import ConnectionClosedError, ClientError
+import pathlib
 from PIL import Image
 import time
 
@@ -71,10 +72,16 @@ class LocalStorage(Storage):
             raise ValueError('Only "text" or "image" file type is supported')
         
 
-    def read_all(self, subdir):
+    def read_all(self, subdir, get_urls=False):
         """Get list of filenames in the specified path"""
         full_path = os.path.join(self.data_dir, subdir)
-        return os.listdir(full_path)
+        file_names = os.listdir(full_path)
+
+        if get_urls:
+            # Return full urls
+            return [pathlib.Path(path).absolute().as_uri() for path in file_names]
+        # Return file names only
+        return file_names
     
 
     def check_file_exists(self, file_name, subdir):
@@ -159,12 +166,17 @@ class S3Storage(Storage):
             raise ValueError('Only "text" or "image" file type is supported')
         
 
-    def read_all(self, subdir, page_size=1000):    
+    def read_all(self, subdir, page_size=1000, get_urls=False):    
         """Get list of object names with the specified prefix"""
         objects = []
         paginator = self.s3.get_paginator("list_objects_v2")
         for page in paginator.paginate(Bucket=self.bucket_name, Prefix=subdir, PaginationConfig={'PageSize': page_size}):
             objects.extend(obj["Key"] for obj in page.get("Contents", []))
+
+        if get_urls:
+            # Return full urls
+            return [f's3://{self.bucket_name}/{key}' for key in objects]
+        # Return file names only
         return [obj.split('/')[-1] for obj in objects]
 
 

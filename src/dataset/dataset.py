@@ -13,7 +13,7 @@ class OCRDataset:
             texts_subdir='texts',
             pages_subdir='pages',
             images_subdir='images',
-            bbox_subdir='boxes',
+            bbox_subdir='labels',
         ):
         self.parser = parser(storage=storage, subdir=texts_subdir)
         self.html_creator = html_creator(storage=storage, subdir=pages_subdir)

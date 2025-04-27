@@ -30,11 +30,11 @@ def s3_storage(strategy):
     ("s3", "invalid"),
 ])
 def temp_storage(request, local_storage):
-    backend, strategy = request.param
+    backend, strategy, get_ruls = request.param
     if backend == "local":
         storage = local_storage
         storage.strategy = strategy
-        yield storage
+        yield storage, get_ruls
     elif backend == "s3":
         with s3_storage(strategy) as storage:
-            yield storage
+            yield storage, get_ruls

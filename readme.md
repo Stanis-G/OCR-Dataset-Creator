@@ -25,7 +25,9 @@ The considerations include:
 3. Extend processing functions
 4. Add support for more tokenizers
 5. Add multiple text blocks in one template
-6. Add more details into html template (lines, frames, tables...)
+6. Add more details into html template (lines, frames, tables, text rotation...)
 7. Add bounding boxes aroung text blocks in images for detection models
 8. Get rid of driver
 9. Create storage for background images
+10. Add more examples of use
+11. Fix out of image text location
