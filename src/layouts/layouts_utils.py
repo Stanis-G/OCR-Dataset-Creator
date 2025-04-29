@@ -1,3 +1,4 @@
+import base64
 from collections import OrderedDict
 import os
 import random
@@ -30,9 +31,10 @@ class HTMLProcessor(BaseProcessor):
             if isinstance(bg_images, str):
                 # Treat bg_images like local path to bg images
                 bg_name = random.choice(os.listdir(bg_images))
-                bg_path = os.path.abspath(os.path.join(bg_images, bg_name))
-                bg_path = bg_path.replace("\\", "/")
-                bg_image_url = f'file://{bg_path}'
+                bg_path = os.path.join(bg_images, bg_name)
+                with open(bg_path, "rb") as image_file:
+                    encoded_string = base64.b64encode(image_file.read()).decode("utf-8")
+                bg_image_url = f"data:image/jpeg;base64,{encoded_string}"
             elif isinstance(bg_images, list):
                 # If bg_images is a list of urls
                 bg_image_url = random.choice(bg_images)

@@ -1,8 +1,6 @@
-import os
 import argparse
 import sys
 from pathlib import Path
-from dotenv import load_dotenv
 
 parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
@@ -12,15 +10,8 @@ from src.layouts.layouts import HTMLCreator
 from src.parsers.parsers import WikiParser
 from src.images.images import ImageCreator
 from src.layouts.config import FONTS, COLORS
-from src.utils.storage import S3Storage
+from src.utils.storage import LocalStorage
 
-load_dotenv()
-
-client_config = dict(
-    endpoint_url=os.getenv("MINIO_URL"),
-    aws_access_key_id=os.getenv("MINIO_ROOT_USER"),
-    aws_secret_access_key=os.getenv("MINIO_ROOT_PASSWORD"),
-)
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('-n', '--name', nargs='?', default='ocr-dataset', type=str)
@@ -91,7 +82,7 @@ dataset = OCRDataset(
     parser=WikiParser,
     html_creator=HTMLCreator,
     image_creator=ImageCreator,
-    storage=S3Storage(dataset_name=dataset_name, client_config=client_config),
+    storage=LocalStorage(dataset_name=dataset_name)
 )
 dataset(
     text_processor_config=text_processor_config,
