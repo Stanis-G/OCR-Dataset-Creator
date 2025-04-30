@@ -1,9 +1,32 @@
 import os
+from string import Template
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 
 from src.utils.storage import Storage
+
+
+def generate_ui_script(images_path, boxes_path, texts_path):
+    """Copy ui_template.py replacing placeholders with real paths"""
+
+    # Define replacement values
+    replacements = {
+        "texts_path_placeholder": texts_path,
+        "images_path_placeholder": images_path,
+        "boxes_path_placeholder": boxes_path,
+    }
+
+    # Read the template script
+    with open(os.path.join('src', 'utils', 'ui', 'ui_template.py'), 'r') as f:
+        template_content = f.read()
+
+    # Create Template object
+    template = Template(template_content)
+
+    # Substitute placeholders with values
+    script = template.substitute(replacements)
+    return script
 
 
 class DataCreator:

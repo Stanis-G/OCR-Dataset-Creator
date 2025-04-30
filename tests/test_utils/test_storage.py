@@ -11,7 +11,7 @@ def test_Storage_init():
 
 @pytest.mark.parametrize("create_file", [True, False])
 def test_file_exists_handler(create_file, temp_storage):
-    storage = temp_storage
+    storage, _ = temp_storage
     subdir = 'texts'
 
     file_name = 'test.txt'
@@ -40,7 +40,7 @@ def test_file_exists_handler(create_file, temp_storage):
     ('text_dir', True),
 ])
 def test_save_and_read_text(subdir, create_file, temp_storage):
-    storage = temp_storage
+    storage, _ = temp_storage
 
     file_name = 'test.txt'
     storage.delete_file(file_name, subdir)
@@ -75,7 +75,7 @@ def test_save_and_read_text(subdir, create_file, temp_storage):
     ('images_dir', True),
 ])
 def test_save_and_read_image(subdir, create_file, temp_storage):
-    storage = temp_storage
+    storage, _ = temp_storage
 
     file_name = 'test.png'
     storage.delete_file(file_name, subdir)

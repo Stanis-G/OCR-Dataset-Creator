@@ -1,11 +1,8 @@
 import cv2
 from io import BytesIO
 import numpy as np
-import os
 import random
 from PIL import Image
-from string import Template
-
 from src.utils.utils import BaseProcessor
 
 
@@ -15,31 +12,6 @@ def get_yolo_bounding_box(coords, canvas_width, canvas_height):
     width = coords['width'] / canvas_width
     height = coords['height'] / canvas_height
     return f"0 {x_center} {y_center} {width} {height}"
-
-
-def generate_ui_script(images_path, boxes_path, ui_save_path):
-    """Copy ui_template.py replacing placeholders with real paths"""
-
-    # Define replacement values
-    replacements = {
-        "images_path_placeholder": images_path,
-        "boxes_path_placeholder": boxes_path,
-    }
-
-    # Read the template script
-    with open(os.path.join('src', 'images', 'ui', 'ui_template.py'), 'r') as f:
-        template_content = f.read()
-
-    # Create Template object
-    template = Template(template_content)
-
-    # Substitute placeholders with values
-    output = template.substitute(replacements)
-
-    # Write the result to a new file
-    file_name = os.path.join(ui_save_path, 'ui.py')
-    with open(file_name, "w") as f:
-        f.write(output)
 
 
 class ImageProcessor(BaseProcessor):

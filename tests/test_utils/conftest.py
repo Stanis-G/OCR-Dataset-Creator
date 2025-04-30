@@ -20,21 +20,21 @@ def s3_storage(strategy):
 
 
 @pytest.fixture(params=[
-    ("local", "rewrite"),
-    ("local", "skip"),
-    ("local", "raise"),
-    ("local", "invalid"),
-    ("s3", "rewrite"),
-    ("s3", "skip"),
-    ("s3", "raise"),
-    ("s3", "invalid"),
+    ("local", "rewrite", True),
+    ("local", "skip", False),
+    ("local", "raise", True),
+    ("local", "invalid", False),
+    ("s3", "rewrite", True),
+    ("s3", "skip", False),
+    ("s3", "raise", True),
+    ("s3", "invalid", False),
 ])
 def temp_storage(request, local_storage):
-    backend, strategy, get_ruls = request.param
+    backend, strategy, get_urls = request.param
     if backend == "local":
         storage = local_storage
         storage.strategy = strategy
-        yield storage, get_ruls
+        yield storage, get_urls
     elif backend == "s3":
         with s3_storage(strategy) as storage:
-            yield storage, get_ruls
+            yield storage, get_urls

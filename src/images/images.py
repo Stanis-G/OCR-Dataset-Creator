@@ -13,7 +13,7 @@ import os
 from urllib.request import pathname2url
 import numpy as np
 from utils.utils import DataCreator, set_driver
-from images.image_utils import ImageProcessor, get_yolo_bounding_box, generate_ui_script
+from images.image_utils import ImageProcessor, get_yolo_bounding_box
 
 
 class ImageCreator(DataCreator):
@@ -63,14 +63,6 @@ class ImageCreator(DataCreator):
                 # save under the image name for ultralytics dataset consistency
                 coords_yolo = get_yolo_bounding_box(coords, width, height)
                 self.storage.save_file(coords_yolo, f'{img_name}.txt', self.bbox_subdir)
-
-        # Generate py script to run streamlit UI
-        images_path = os.path.join(self.storage.data_dir, self.subdir)
-        if self.bbox_subdir:
-            boxes_path = os.path.join(self.storage.data_dir, self.bbox_subdir)
-        else:
-            boxes_path = None
-        generate_ui_script(images_path, boxes_path, self.storage.data_dir)
 
 
 class AsyncImageIterator:

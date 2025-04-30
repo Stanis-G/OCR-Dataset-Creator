@@ -42,20 +42,23 @@ class LocalStorage(Storage):
         self.data_dir = dataset_name
 
 
-    def save_file(self, content, file_name, subdir):
+    def save_file(self, content, file_name, subdir=None):
         # Decide whether file should be saved
-        if self._file_exists_handler(file_name, subdir):
+        if not subdir or self._file_exists_handler(file_name, subdir):
             
-            # Create subdir if it doesn't exist
-            subdir_path = os.path.join(self.data_dir, subdir)
-            os.makedirs(subdir_path, exist_ok=True)
+            if subdir:
+                # Create subdir if it doesn't exist
+                subdir_path = os.path.join(self.data_dir, subdir)
+                os.makedirs(subdir_path, exist_ok=True)
+                file_name = os.path.join(subdir_path, file_name)
+            else:
+                file_name = os.path.join(self.data_dir, file_name)
 
-            file_name_full = os.path.join(subdir_path, file_name)
             if isinstance(content, str):
-                with open(file_name_full, 'w', encoding='utf-8') as f:
+                with open(file_name, 'w', encoding='utf-8') as f:
                     f.write(content)
             elif isinstance(content, Image.Image):
-                content.save(file_name_full, format='PNG')
+                content.save(file_name, format='PNG')
             else:
                 raise TypeError('Content should be one of the types: str, ImageImage')
 
@@ -131,9 +134,9 @@ class S3Storage(Storage):
         self.s3 = s3
     
 
-    def save_file(self, content, file_name, subdir):
+    def save_file(self, content, file_name, subdir=None):
         # Decide whether file should be saved
-        if self._file_exists_handler(file_name, subdir):
+        if not subdir or self._file_exists_handler(file_name, subdir):
             if isinstance(content, str):
                 file_obj = BytesIO(content.encode("utf-8"))
             elif isinstance(content, Image.Image):
@@ -142,8 +145,10 @@ class S3Storage(Storage):
                 file_obj.seek(0)
             else:
                 raise TypeError('Content should be one of the types: str, ImageImage')
-            file_name_full = f'{subdir}/{file_name}'
-            self.s3.upload_fileobj(file_obj, self.bucket_name, file_name_full)
+            
+            if subdir:
+                file_name = f'{subdir}/{file_name}'
+            self.s3.upload_fileobj(file_obj, self.bucket_name, file_name)
 
 
     def read_file(self, file_name, subdir, file_type='text'):
