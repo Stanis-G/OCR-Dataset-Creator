@@ -77,6 +77,8 @@ class LocalStorage(Storage):
 
     def read_all(self, subdir, get_urls=False):
         """Get list of filenames in the specified path"""
+        if not self.check_file_exists(file_name=None, subdir=subdir):
+            return []
         full_path = os.path.join(self.data_dir, subdir)
         file_names = os.listdir(full_path)
 
@@ -87,8 +89,11 @@ class LocalStorage(Storage):
         return file_names
     
 
-    def check_file_exists(self, file_name, subdir):
-        file_name_full = os.path.join(self.data_dir, subdir, file_name)
+    def check_file_exists(self, file_name=None, subdir=''):
+        if file_name:
+            file_name_full = os.path.join(self.data_dir, subdir, file_name)
+        else:
+            file_name_full = os.path.join(self.data_dir, subdir)
         return os.path.exists(file_name_full)
     
 
@@ -173,6 +178,8 @@ class S3Storage(Storage):
 
     def read_all(self, subdir, page_size=1000, get_urls=False):    
         """Get list of object names with the specified prefix"""
+        if not self.check_file_exists(file_name=None, subdir=subdir):
+            return []
         objects = []
         paginator = self.s3.get_paginator("list_objects_v2")
         for page in paginator.paginate(Bucket=self.bucket_name, Prefix=subdir, PaginationConfig={'PageSize': page_size}):
@@ -185,9 +192,9 @@ class S3Storage(Storage):
         return [obj.split('/')[-1] for obj in objects]
 
 
-    def check_file_exists(self, file_name, subdir):
+    def check_file_exists(self, file_name=None, subdir=''):
         """Check whether file exists in subfolder"""
-        file_name_full = f'{subdir}/{file_name}'
+        file_name_full = f'{subdir}/{file_name}' if file_name else subdir
         try:
             self.s3.head_object(Bucket=self.bucket_name, Key=file_name_full)
             return True

@@ -12,7 +12,6 @@ from src.layouts.layouts import HTMLCreator
 from src.parsers.parsers import WikiParser
 from src.images.images import ImageCreator
 from src.layouts.config import FONTS, COLORS
-from src.utils.storage import S3Storage
 
 load_dotenv()
 
@@ -84,6 +83,10 @@ image_processor_config = {
     'add_random_impulse_noise': dict(
         proba_range=(0, 0.03),
     ),
+    'add_random_motion_blur': dict(
+        kernel_size_range=(1, 20),
+        angle_range=(0, 90),
+    ),
 }
 
 dataset = OCRDataset(
@@ -91,11 +94,16 @@ dataset = OCRDataset(
     parser=WikiParser,
     html_creator=HTMLCreator,
     image_creator=ImageCreator,
-    storage=S3Storage(dataset_name=dataset_name, client_config=client_config),
+    storage_type='S3',
+    storage_params={
+        'dataset_name': dataset_name,
+        'client_config': client_config,
+    },
 )
 dataset(
     text_processor_config=text_processor_config,
     html_processor_config=html_processor_config,
     image_processor_config=image_processor_config,
     dataset_size=dataset_size,
+    delay=0.5,
 )

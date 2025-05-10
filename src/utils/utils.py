@@ -3,8 +3,8 @@ from string import Template
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-
-from src.utils.storage import Storage
+from math import ceil
+from multiprocessing import Process
 
 
 def generate_ui_script(images_path, boxes_path, texts_path):
@@ -31,13 +31,48 @@ def generate_ui_script(images_path, boxes_path, texts_path):
 
 class DataCreator:
 
-    def __init__(self, storage, subdir):
-        self.storage = storage
+    def __init__(self, storage_cls, storage_params, subdir):
+        self.storage_cls = storage_cls
+        self.storage_params = storage_params
+        self.storage = storage_cls(**storage_params)
         self.subdir = subdir
-        if not isinstance(self.storage, Storage):
-            raise TypeError('"storage" should be a subclass of "Storage"')
-        if not isinstance(self.subdir, str):
-            raise TypeError('"subdir" should be str')
+
+
+    def process(self):
+        pass
+        
+    
+    def __call__(self, process_params, input_data_subdir=None, dataset_size=None, start_index=0, num_processes=5):
+        if input_data_subdir and not dataset_size:
+            file_names = self.storage.read_all(input_data_subdir)[start_index:]
+        elif dataset_size and not input_data_subdir:
+            file_names = range(dataset_size)[start_index:]
+        else:
+            raise ValueError('One should provide either "input_data_subdir" or "dataset_size"')
+        
+        chunk_size = ceil(len(file_names) / num_processes)
+        processes = []
+        process_params.update({
+            'subdir': self.subdir,
+            'input_data_subdir': input_data_subdir,
+            'dataset_size': dataset_size,
+            'storage_cls': self.storage_cls,
+            'storage_params': self.storage_params,
+        })
+        
+        for chunk_num in range(num_processes):
+            chunk = file_names[chunk_num * chunk_size:(chunk_num + 1) * chunk_size]
+            process_params['file_names'] = chunk
+            process_params['chunk_num'] = chunk_num
+            pr = Process(
+                target=self.process,
+                kwargs=process_params,
+            )
+            processes.append(pr)
+            pr.start()
+
+        for pr in processes:
+            pr.join()
         
 
 class BaseProcessor:

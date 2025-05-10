@@ -17,7 +17,7 @@ Besides, images package has functionality of making bounding boxes around the te
 __Datasets__
 
 Dataset package combines parsers, layouts and images. It handles dataset directory or S3 bucket structure and generates streamlit ui script, displaying all images with drawn bboxes and corresponding parsed texts. It is useful to see your data and check it for problems, so you can change processing settings in previous steps and generate a new dataset.
-To open streamlit ui after you have generated dataset, just run `streamlit run <dataset_folder>/ui.py`. If you use S3 stored dataset, you need to download it first.
+To open streamlit ui after you have generated dataset, just run `streamlit run <dataset_folder>/ui.py` from env with streamlit installed. If you use S3 stored dataset, you need to download it first.
 
 __Examples__
 
@@ -27,7 +27,7 @@ Contains examples of use for different parsers. Some examples are inconsistent f
 The considerations include:
 1. Add tests for Dataset and DataCreator subclasses
 2. Refine async classes
-3. Extend processing functions
+3. Extend processing functions (image compression, dust, scratches, smudges, affine and projective transformations)
 4. Add support for more tokenizers
 5. Add multiple text blocks in one template
 6. Add more details into html template (lines, frames, tables, text rotation...)
@@ -36,3 +36,4 @@ The considerations include:
 9. Add more examples of use
 10. Fix out of image text location
 11. Make unified interface for parsers
+12. Deprecate non parallel classes (change test to work with parallel classes, add data postprocessing mechanism)

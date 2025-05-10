@@ -28,6 +28,8 @@ class ImageProcessor(BaseProcessor):
             'add_random_gaussian_noise': self.add_random_gaussian_noise,
             'add_impulse_noise': self.add_impulse_noise,
             'add_random_impulse_noise': self.add_random_impulse_noise,
+            'add_motion_blur': self.add_motion_blur,
+            'add_random_motion_blur': self.add_random_motion_blur,
         }
 
     
@@ -156,4 +158,29 @@ class ImageProcessor(BaseProcessor):
     def add_random_impulse_noise(self, img, proba_range=(0, 0.05)):
         proba = random.uniform(*proba_range)
         img = self.add_impulse_noise(img, proba)
+        return img
+    
+
+    def add_motion_blur(self, img, kernel_size=15, angle=0):
+        image_np = np.array(img)
+
+        # Create the motion blur kernel
+        kernel = np.zeros((kernel_size, kernel_size))
+        kernel[int((kernel_size - 1) / 2), :] = np.ones(kernel_size)
+        rotation_matrix = cv2.getRotationMatrix2D((kernel_size / 2 - 0.5, kernel_size / 2 - 0.5), angle, 1)
+        kernel = cv2.warpAffine(kernel, rotation_matrix, (kernel_size, kernel_size))
+        kernel = kernel / np.sum(kernel)
+
+        # Apply kernel to each channel
+        img_blurred = np.zeros_like(image_np)
+        for i in range(3):
+            img_blurred[:, :, i] = cv2.filter2D(image_np[:, :, i], -1, kernel)
+
+        return img_blurred
+    
+
+    def add_random_motion_blur(self, img, kernel_size_range=(1, 20), angle_range=(0, 90)):
+        kernel_size = random.randint(*kernel_size_range)
+        angle = random.randint(*angle_range)
+        img = self.add_motion_blur(img, kernel_size, angle)
         return img
