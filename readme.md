@@ -36,4 +36,4 @@ The considerations include:
 9. Add more examples of use
 10. Fix out of image text location
 11. Make unified interface for parsers
-12. Deprecate non parallel classes (change test to work with parallel classes, add data postprocessing mechanism)
+12. Add data postprocessing mechanism

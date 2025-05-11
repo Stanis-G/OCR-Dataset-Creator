@@ -7,10 +7,13 @@ from src.parsers.parsers import WikiParser
 
 @pytest.fixture
 def get_soup(local_storage):
+    storage_cls, storage_params = local_storage
+    parser = WikiParser(
+        storage_cls=storage_cls,
+        storage_params=storage_params,
+        subdir='texts',
+    )
 
-    storage = local_storage
-    parser = WikiParser(storage=storage, subdir='texts')
-    
     page_title = parser.get_random_wikipedia_title()
     soup = parser.get_soup(page_title)
     return soup

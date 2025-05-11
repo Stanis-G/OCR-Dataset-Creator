@@ -178,8 +178,6 @@ class S3Storage(Storage):
 
     def read_all(self, subdir, page_size=1000, get_urls=False):    
         """Get list of object names with the specified prefix"""
-        if not self.check_file_exists(file_name=None, subdir=subdir):
-            return []
         objects = []
         paginator = self.s3.get_paginator("list_objects_v2")
         for page in paginator.paginate(Bucket=self.bucket_name, Prefix=subdir, PaginationConfig={'PageSize': page_size}):

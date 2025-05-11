@@ -1,21 +1,12 @@
 import pytest
-
-from src.utils.storage import LocalStorage
-from src.utils.utils import DataCreator
+from src.utils.utils import generate_ui_script
 
 
-@pytest.mark.parametrize("subdir,storage", [
-    ('texts', LocalStorage('test-storage')),
-    ('text_dir', LocalStorage('test-storage')),
-    (None, LocalStorage('test-storage')),
-    ('text_dir', None),
+@pytest.mark.parametrize("images_path,boxes_path,texts_path", [
+    ('images', 'boxes', 'texts'),
+    (10, None, [20, 30]),
 ])
-def test_DataCreator_init(subdir, storage):
+def test_generate_ui_script(images_path, boxes_path, texts_path):
 
-    if not subdir or not storage:
-        with pytest.raises(TypeError):
-            DataCreator(storage=storage, subdir=subdir)
-    else:
-        parser = DataCreator(storage=storage, subdir=subdir)
-        assert hasattr(parser, 'subdir')
-        assert hasattr(parser, 'storage')
+    script = generate_ui_script(images_path, boxes_path, texts_path)
+    assert 'placeholder' not in script

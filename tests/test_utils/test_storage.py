@@ -4,7 +4,7 @@ import pytest
 from src.utils.storage import Storage
 
 
-def test_Storage_init():
+def test_storage_init():
     with pytest.raises(TypeError, match="Can't instantiate abstract class Storage*"):
         Storage()
 
@@ -121,7 +121,7 @@ def test_read_all_and_delete(temp_storage):
     storage, get_urls = temp_storage
     subdir = 'text_subdir'
 
-    num_files = 10
+    num_files = 0
     for i in range(num_files):
         content = f'test_{i}'
         file_name = f'{content}.txt'

@@ -9,5 +9,6 @@ from src.utils.storage import LocalStorage
 @pytest.fixture
 def local_storage(strategy='rewrite'):
     with tempfile.TemporaryDirectory() as tmpdir:
-        storage = LocalStorage(tmpdir, file_exists_strategy=strategy)
-        yield storage
+        storage_cls = LocalStorage
+        storage_params = {'dataset_name': tmpdir, 'file_exists_strategy': strategy}
+        yield storage_cls, storage_params

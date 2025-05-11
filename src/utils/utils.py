@@ -1,10 +1,14 @@
+import copy
 import os
+from abc import ABC, abstractmethod
 from string import Template
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from math import ceil
 from multiprocessing import Process
+
+from src.utils.storage import LocalStorage, S3Storage
 
 
 def generate_ui_script(images_path, boxes_path, texts_path):
@@ -29,22 +33,27 @@ def generate_ui_script(images_path, boxes_path, texts_path):
     return script
 
 
-class DataCreator:
+class DataCreator(ABC):
 
-    def __init__(self, storage_cls, storage_params, subdir):
-        self.storage_cls = storage_cls
+    def __init__(self, storage_type, storage_params, subdir):
+        self.storage_type = storage_type
         self.storage_params = storage_params
-        self.storage = storage_cls(**storage_params)
         self.subdir = subdir
 
 
+    @abstractmethod
     def process(self):
         pass
         
     
     def __call__(self, process_params, input_data_subdir=None, dataset_size=None, start_index=0, num_processes=5):
+
+        storage_cls = DatasetFactory.get_storage(self.storage_type)
+        storage_params_copy = copy.deepcopy(self.storage_params)
+        storage = storage_cls(**storage_params_copy)
+
         if input_data_subdir and not dataset_size:
-            file_names = self.storage.read_all(input_data_subdir)[start_index:]
+            file_names = storage.read_all(input_data_subdir)[start_index:]
         elif dataset_size and not input_data_subdir:
             file_names = range(dataset_size)[start_index:]
         else:
@@ -56,10 +65,10 @@ class DataCreator:
             'subdir': self.subdir,
             'input_data_subdir': input_data_subdir,
             'dataset_size': dataset_size,
-            'storage_cls': self.storage_cls,
+            'storage_type': self.storage_type,
             'storage_params': self.storage_params,
         })
-        
+
         for chunk_num in range(num_processes):
             chunk = file_names[chunk_num * chunk_size:(chunk_num + 1) * chunk_size]
             process_params['file_names'] = chunk
@@ -92,6 +101,14 @@ class BaseProcessor:
                 else:
                     method(**params)
         return obj
+    
+
+class DatasetFactory:
+
+    @classmethod
+    def get_storage(self, storage_type='local'):
+        classes = {'local': LocalStorage, 'S3': S3Storage}
+        return classes[storage_type]
 
 
 def set_driver(driver_path, download_dir=None):

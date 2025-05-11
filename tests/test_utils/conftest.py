@@ -15,8 +15,13 @@ def s3_storage(strategy):
         aws_secret_access_key=os.getenv("MINIO_ROOT_PASSWORD"),
     )
     with mock_aws():
-        storage = S3Storage('test-bucket', client_config, file_exists_strategy=strategy)
-        yield storage
+        storage_cls = S3Storage
+        storage_params = {
+            'dataset_name': 'test-bucket',
+            'client_config': client_config,
+            'file_exists_strategy': strategy,
+        }
+        yield storage_cls, storage_params
 
 
 @pytest.fixture(params=[
@@ -32,9 +37,12 @@ def s3_storage(strategy):
 def temp_storage(request, local_storage):
     backend, strategy, get_urls = request.param
     if backend == "local":
-        storage = local_storage
+        storage_cls, storage_params = local_storage
+        storage = storage_cls(**storage_params)
         storage.strategy = strategy
         yield storage, get_urls
     elif backend == "s3":
-        with s3_storage(strategy) as storage:
+        with s3_storage(strategy) as storage_tpl:
+            storage_cls, storage_params = storage_tpl
+            storage = storage_cls(**storage_params)
             yield storage, get_urls

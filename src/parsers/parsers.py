@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+import copy
 import sys
 import requests
 from requests.exceptions import ReadTimeout
@@ -13,13 +14,13 @@ from parsers.parser_utils import TextProcessor
 import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
-from utils.utils import DataCreator, set_driver
+from utils.utils import DataCreator, DatasetFactory, set_driver
 
 
 class WikiParser(DataCreator):
 
-    def __init__(self, storage, subdir='texts'):
-        super().__init__(storage=storage, subdir=subdir)
+    def __init__(self, storage_type, storage_params, subdir='texts'):
+        super().__init__(storage_type, storage_params, subdir)
         self.WIKI_API_URL = "https://en.wikipedia.org/w/api.php"
 
 
@@ -55,35 +56,37 @@ class WikiParser(DataCreator):
         return soup
 
 
-    def __call__(self, processor_config, dataset_size=10000, delay=0.05, start_index=0):
+    def process(self, file_names, subdir, processor_config, storage_type, storage_params, chunk_num, delay=0.05, **kwargs):
         """Collects Wikipedia section titles until reaching the target count."""
+        storage_cls = DatasetFactory.get_storage(storage_type)
+        storage_params_copy = copy.deepcopy(storage_params)
+        storage = storage_cls(**storage_params_copy)
+        processor = TextProcessor(processor_config)
 
-        self.processor = TextProcessor(processor_config)
-
-        for num in tqdm(range(start_index, dataset_size)):
+        for num in tqdm(file_names, position=chunk_num, desc=f'Process {chunk_num}'):
 
             # Parse and process data
             page_title = self.get_random_wikipedia_title()
             soup = self.get_soup(page_title)
             if not soup:
                 continue
-            sentences = self.processor(soup)
+            sentences = processor(soup)
 
             for text in sentences:
 
                 file_name = f'title_{num}.txt'
-                self.storage.save_file(text, file_name, self.subdir)
+                storage.save_file(text, file_name, subdir)
             time.sleep(delay) # Avoid hitting API rate limits
         
-        # Postprocessing
-        if 'update_token_counts' in processor_config and start_index < dataset_size:
-            self.processor.save_state('token_counts.json')
-            self.processor.calc_probas()
-            # Read every saved file, postprocess and rewrite it
-            for file_name in tqdm(self.storage.read_all(self.subdir)):
-                text = self.storage.read_file(file_name, self.subdir, file_type='text')
-                text = self.processor.remove_frequent_tokens(text)
-                self.storage.save_file(text, file_name, self.subdir)
+        # # Postprocessing
+        # if 'update_token_counts' in processor_config and start_index < dataset_size:
+        #     processor.save_state('token_counts.json')
+        #     processor.calc_probas()
+        #     # Read every saved file, postprocess and rewrite it
+        #     for file_name in tqdm(storage.read_all(subdir)):
+        #         text = storage.read_file(file_name, subdir, file_type='text')
+        #         text = processor.remove_frequent_tokens(text)
+        #         storage.save_file(text, file_name, subdir)
 
 
 class YouTubeParser:
@@ -168,73 +171,3 @@ class PowerPointTemplateParser:
                 time.sleep(3)
         finally:
             driver.quit()
-
-
-class ParallelWikiParser(DataCreator):
-
-    def __init__(self, storage_cls, storage_params, subdir='texts'):
-        super().__init__(storage_cls, storage_params, subdir)
-        self.WIKI_API_URL = "https://en.wikipedia.org/w/api.php"
-
-
-    def get_random_wikipedia_title(self):
-        """Fetches a random Wikipedia page title."""
-        params = {
-            "action": "query",
-            "list": "random",
-            "rnnamespace": 0, # Only main articles (not Talk, User, etc.)
-            "format": "json"
-        }
-        response = requests.get(self.WIKI_API_URL, params=params).json()
-        return response["query"]["random"][0]["title"]
-
-
-    def get_soup(self, page_title, timeout=10):
-        """Fetches section titles from a given Wikipedia page."""
-        params = {
-            "action": "parse",
-            "page": page_title,
-            "format": "json",
-            "prop": "text"
-        }
-        try:
-            response = requests.get(self.WIKI_API_URL, params=params, timeout=timeout).json()
-        except ReadTimeout:
-            return None
-        if "error" in response:
-            return [] # Skip pages with issues
-        html_content = response.get("parse", {}).get("text", {}).get("*", "")
-
-        soup = BeautifulSoup(html_content, "html.parser")
-        return soup
-
-
-    def process(self, file_names, subdir, processor_config, storage_cls, storage_params, chunk_num, delay=0.05, **kwargs):
-        """Collects Wikipedia section titles until reaching the target count."""
-        storage = storage_cls(**storage_params)
-        processor = TextProcessor(processor_config)
-
-        for num in tqdm(file_names, position=chunk_num, desc=f'Process {chunk_num}'):
-
-            # Parse and process data
-            page_title = self.get_random_wikipedia_title()
-            soup = self.get_soup(page_title)
-            if not soup:
-                continue
-            sentences = processor(soup)
-
-            for text in sentences:
-
-                file_name = f'title_{num}.txt'
-                storage.save_file(text, file_name, subdir)
-            time.sleep(delay) # Avoid hitting API rate limits
-        
-        # # Postprocessing
-        # if 'update_token_counts' in processor_config and start_index < dataset_size:
-        #     processor.save_state('token_counts.json')
-        #     processor.calc_probas()
-        #     # Read every saved file, postprocess and rewrite it
-        #     for file_name in tqdm(storage.read_all(subdir)):
-        #         text = storage.read_file(file_name, subdir, file_type='text')
-        #         text = processor.remove_frequent_tokens(text)
-        #         storage.save_file(text, file_name, subdir)
